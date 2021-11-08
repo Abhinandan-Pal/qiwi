@@ -1,0 +1,14 @@
+fn main() {
+    a: q7 = 42;
+    b: q7 = 56;
+    c: q7 = 12;
+    sub(add(a, b), c)
+}
+
+fn add(lhs: q7, rhs: q7) {
+    (lhs + rhs)
+}
+
+fn sub(lhs: q7, rhs: q7) {
+    (lhs - rhs)
+}
