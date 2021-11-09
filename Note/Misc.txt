@@ -1,0 +1,10 @@
+id = if BE { X(id)} else { Y(id) }    //generate both Y(id) and X(id) and multiplex the result.
+
+id = if BE {X(id)}   can be thought of as id = if BE {X(id)} else {I(id)}
+
+the comparator can perform a>b and a<=b
+
+Short hand:
+x = FUNC(x) can be written as FUNC(x)
+
+while_c,for_c,if_c are for the classical version. This is for readability one can simple use "while/for/if" and compiler will decide classical or qunatum during runtime.

@@ -1,0 +1,15 @@
+1)Qiwi Code
+
+if( A AND B OR C) { D = NOT(D) }
+
+One Gate Code
+
+B = Toffoli(A,B)
+C = NOT(C)
+B = NOT(B)
+C = Toffoli(A,C)
+D = CNOT(C,D)
+C = Toffoli(A,C)
+B = NOT(B)
+C = NOT(C)
+B = Toffoli(A,B)

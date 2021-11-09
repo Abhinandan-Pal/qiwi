@@ -1,2 +1,1 @@
-# qiwi
-Quantum Programming Language
+Qiwi

@@ -1,0 +1,102 @@
+QE -> QE +. QE 		{QE1.type.len = max(QE2.type.len, QE2.type.len)+1;
+					 E1.code = E2.code || E3.code || "QE1 = ADD1(QE2,QE3)"}
+	
+	| QE + QE 		{QE1.type.len = max(QE2.type.len, QE2.type.len)
+					 E1.code = E2.code || E3.code || "QE1 = ADD2(QE2,QE3)"}
+	
+	| QE - QE   	{QE1.type.len = max(QE2.type.len, QE2.type.len)
+					E1.code = E2.code || E3.code || "QE1 = SUB(QE2,QE3)"}
+	
+	| QE * QE 		{QE1.type.len = max(QE2.type.len, QE2.type.len)
+					E1.code = E2.code || E3.code || "QE1 = MULT1(QE2,QE3)"}
+	
+	| QE *. QE 		{QE1.type.len = QE2.type.len + QE2.type.len
+					E1.code = E2.code || E3.code || "QE1 = MULT2(QE2,QE3)"}
+
+	| QE 			{QE1.type.len = QE2.type.len
+					E1.code = "QE1 = I(QE2)"}
+
+	| id 			{QE1.type.len = id.type.len
+					E1.code = "QE1 = I(id)"}
+
+CQE -> CQE +. CQE 		{CQE1.type.len = max(CQE2.type.len, CQE2.type.len)+1;
+						 CQE1.cond = CQE1.cond = CQE1.cond
+					 	E1.code = E2.code || E3.code || "QE1 = CADD1(QE2,QE3,CQE1.cond)"}
+	
+	| CQE + CQE 		{QE1.type.len = max(QE2.type.len, QE2.type.len)
+						CQE1.cond = CQE1.cond = CQE1.cond
+					 	E1.code = E2.code || E3.code || "QE1 = CADD2(QE2,QE3,CQE1.cond)"}
+	
+	| CQE - CQE   		{QE1.type.len = max(QE2.type.len, QE2.type.len)
+						CQE1.cond = CQE1.cond = CQE1.cond
+						E1.code = E2.code || E3.code || "QE1 = CSUB(QE2,QE3,CQE1.cond)"}
+	
+	| CQE * CQE 		{QE1.type.len = max(QE2.type.len, QE2.type.len)
+						CQE1.cond = CQE1.cond = CQE1.cond
+						E1.code = E2.code || E3.code || "QE1 = CMULT1(QE2,QE3,CQE1.cond)"}
+	
+	| CQE *. CQE 		{QE1.type.len = QE2.type.len + QE2.type.len
+						CQE1.cond = CQE1.cond = CQE1.cond
+						E1.code = E2.code || E3.code || "QE1 = CMULT2(QE2,QE3,CQE1.cond)"}
+		
+	| CQE 				{QE1.type.len = QE2.type.len
+						CQE1.cond = CQE1.cond = CQE1.cond
+						E1.code = "QE1 = I(QE2)"}
+
+	| id 				{QE1.type.len = id.type.len
+						CQE1.cond = CQE1.cond = CQE1.cond
+						E1.code = "QE1 = I(id)"}
+
+
+QB -> QB AND QB 	{QB.type = q1
+					B1.code = B2.code || B3.code || "QB1 = Toffoli(QB2,QB3)"
+					}
+
+	| QB OR QB		{QB.type = q1
+					B1.code = "QB2 = NOT(QB2)
+					QB3 = NOT(QB3)
+					QB1 = Toffoli(QB2,QB3)
+					QB2 = NOT(QB2)
+					QB2 = NOT(QB2)
+					QB1 = NOT(QB2)"
+					}
+
+	| QE < QE 		{QB.type = q1
+					QB.code = E1.code || E2.code || "QB1 = LESS(QE1,QE2)"}
+
+	| QE > QE 		{QB.type = q1
+					QB.code = E1.code || E2.code || "QB1 = LESS(QE2,QE1)"}
+
+	| QE >= QE 		{QB.type = q1
+					QB.code = E1.code || E2.code || "QB1 = GTREQ(QE1,QE2)"}
+
+	| QE <= QE 		{QB.type = q1
+					QB.code = E1.code || E2.code || "QB1 = GTREQ(QE2,QE1)"}
+
+	| id1			{QB.type = q1
+					 B1.code = "QB1 = I(id1)"
+					}
+
+	| |0>			{QB.type = q1
+					 B1.code = "QB1 = I(|0>)"
+					}
+
+	| |1>			{QB.type = q1
+					 B1.code = "QB1 = I(|1>)"
+					}
+
+//Can do nested if with mutiple lines in braces for later.
+
+QS -> id = QE 						{S1.code = E1.code || "id = QE"}
+	| id = if(QB) {CQE} 			{ CQE.cond = QB
+									S1.code = B1.code ||CQE.code|| B1.code.reverse}    //can make RHS of = QE and can thus be added as a prod to QE
+
+	| id = if(QB) {CQE} else {CQE}   { CQE.cond = QB
+									S1.code = B1.code ||CQE1.code||CQE2.code||"Multiplex"CQE1,CQE2 on BE" B1.code.reverse}
+
+ 
+
+ 	| repeat (QE) times do {id = QE}			
+ 	{//if QE is 1/root2 |14> 	+ 1/root2 |12>. then half of id will have result for running for 	12 cycles other half for 14}
+ 	[for i in (1..QE.type.len)
+ 		generate("if(QE.val.i) {id=QE*i}")]

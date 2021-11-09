@@ -1,0 +1,138 @@
+func unifySize(a: qN , b: qN): qN
+{
+	if_c(a.len<b.len)
+	{
+		a.le
+	}
+}
+@override
+func add1 (a: qN , b: qN): qN
+{ // add without carry
+	int n = a.len
+	q.N b = |b0>
+	for_c i in [1 to n step 1] //n not included
+	{
+		if (a.i) {b.i = NOT(b.i)}  // CNOT(c->a.i,t->b.i)
+	}
+	for_c i in [n-1 to 1 step -1]
+	{
+		if (a.i) {a.(i+1) = NOT(a.(i+1))}  // CNOT(c->a.i,t->a.(i+1))
+	}
+	for_c i in [0 to n-2 step 1]
+	{
+		if (a.i AND b.i) {a.(i+1) = NOT(a.(i+1))} // Toffoli(c1->a.i,c2->b.it->a.(i+1))
+	}
+	for_c i in [n-1 to 0 step -1]
+	{
+		if (a.i AND b.i) {a.(i+1) = NOT(a.(i+1))}
+		if (a.i) {b.(i) = NOT(b.(i))}
+		//Peres(a.i,b.i,a.(i+1)) wont it be better to have a peres function
+	}
+	for_c i in [1 to n-2 step 1]
+	{
+		if (a.i) {a.(i+1) = NOT(a.(i+1))}  // CNOT(c->a.i,t->a.(i+1))
+	}
+	for_c i in [1 to n-1 step 1]
+	{
+		if (a.i) {b.i = NOT(b.i)}  // CNOT(c->a.i,t->b.i)
+	}
+	return b
+}
+
+@override
+func add2 (a: qN , b: qN): qN
+{
+	qN b = a + b
+
+	qN b = discard(b,b.len-1)
+	
+	return b
+}
+
+@override
+func sub1 (a: qN , b: qN): qN
+{
+	for_c i in [0 to n-1 step 1]
+	{
+		a.i = NOT(a.i)  // CNOT(c->a.i,t->a.i)
+	}
+
+	qN b = a + b 
+
+	for_c i in [0 to n-1 step 1]
+	{
+		a.i = NOT(a.i)  // CNOT(c->a.i,t->a.i)
+		b.i = NOT(b.i)  // CNOT(c->b.i,t->b.i)
+	}
+	qN b = discard_last(b,1)
+
+	return b
+}
+func rotRight (qN: p): qN
+{
+	int k = p.len
+	int k1 = floor(k/2)
+	if_c (k % 2 == 0)
+	{
+		int i = 0
+		int j = k - 1;
+		while_c (i < k1 && j>= k1)
+		{
+			SWAP(p.i,p.j)
+			i = i + 1
+			j = j - 1
+		}
+		int i = 0
+		int j = k - 2;
+		while_c (i < k1 - 1 && j>= k1)
+		{
+			SWAP(p.i,p.j)
+			i = i + 1
+			j = j - 1
+		}
+	}
+	else
+	{
+		int i = 0
+		int j = k - 1;
+		while_c (i < k1 && j>= k1+1)
+		{
+			SWAP(p.i,p.j)
+			i = i + 1
+			j = j - 1
+		}
+		int i = 0
+		int j = k - 2;
+		while_c (i < k1 && j>= k1)
+		{
+			SWAP(p.i,p.j)
+			i = i + 1
+			j = j - 1
+		}
+	}
+	return p
+}
+func mult1(qN:a,qN:b): qN 
+{
+	int n = a.len
+	qN = |0>*(2*n)
+	for_c i in [0 to n-2 step 1]
+	{
+		if(a.i){
+			p.((2*n-1)..(n-1)) = p.((2*n-1)..(n-1)) + b.((n-1)..0)
+		}
+		p.((2*n-1)..(0)) = rotRight(p.((2*n-1)..(0)))
+	}
+	if(a.(n-1)){
+			p.((2*n-1)..(n-1)) = p.((2*n-1)..(n-1)) + b.((n-1)..0)
+		}
+	return p
+}
+func mult2(qN:a,qN:b): qN 
+{
+	qN p = a + b
+
+	qN p = discard_last(p,p.len/2)
+	
+	return b
+}

@@ -1,0 +1,53 @@
+@override
+func compare_generic (a: qN , b: qN, c: q1): q1
+{ // add without carry
+	int n = a.len
+	q1 anc = |0>
+	q1 res = |0>
+	
+	for i in [0 to n step 1] //n not included
+	{
+		if (a.i) {b.i = NOT(b.i)}  // CNOT(c->a.i,t->b.i)
+	}
+	
+	for i in [n-1 to 0 step -1]
+	{
+		if (b.i) {b.(i-1) = NOT(b.(i-1))}  // CNOT(c->a.i,t->a.(i+1))
+	}
+	if (b.(n-1)) {res = NOT(res)}
+	if (b.1) {anc = NOT(anc)}
+	if (a.0 AND b.0) {anc = NOT(anc)}
+	if (anc AND (NOT a.1)) {b.1 = NOT(b.1)}
+	
+
+	for i in [1 to n-3 step 1]
+	{
+		if (b.i AND NOT a.(i+1)) {b.(i+1) = NOT(b.(i+1))} // Toffoli(c1->a.i,c2->b.it->a.(i+1))
+	}
+	
+	if (b.(n-2) AND NOT a.(n-1)) {res = NOT(res)}
+	
+	for i in [n-3 to 1 step -1]
+	{
+		if (b.i AND NOT a.(i+1)) {b.(i+1) = NOT(b.(i+1))} // Toffoli(c1->a.i,c2->b.it->a.(i+1))
+	}
+
+	for i in [n-1 to 0 step -1]
+	{
+		if (b.i) {b.(i-1) = NOT(b.(i-1))}  // CNOT(c->a.i,t->a.(i+1))
+	}
+
+	for i in [0 to n step 1] //n not included
+	{
+		if (a.i) {b.i = NOT(b.i)}  // CNOT(c->a.i,t->b.i)
+	}
+	return res
+}
+func less (a: qN , b: qN): q1
+{
+	return compare_generic(a,b,0)
+}
+unc gtreq (a: qN , b: qN): q1
+{
+	return compare_generic(a,b,1)
+}

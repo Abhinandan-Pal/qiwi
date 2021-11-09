@@ -1,0 +1,28 @@
+@Overide
+func toffoli (q1: a, q1: b): q1
+{
+	q1 c = |0>
+	if(a){c=V(c)}
+	if(b){a=NOT(a)}
+	if(b){c=V(c)}
+	if(a){c=V+(c)}
+	if(b){a=NOT(a)}
+	return c
+}
+
+@Overide
+func peres (q1: a, q1: b): q1
+{
+	q1 c = |0>
+	if(a){c=V(c)}
+	if(b){c=V+(c)}
+	if(a){b=NOT(b)}
+	if(b){c=NOT(c)}
+	return b,c
+}
+
+CNOT (q1: a, q1: b): q1
+{
+	if(a){b=V(b)}
+	return b
+}

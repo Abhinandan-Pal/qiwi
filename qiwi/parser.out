@@ -1,0 +1,813 @@
+Created by PLY version 3.11 (http://www.dabeaz.com/ply)
+
+Unused terminals:
+
+    KEY_ELSE
+    KEY_IF
+
+Grammar
+
+Rule 0     S' -> program
+Rule 1     program -> <empty>
+Rule 2     program -> funcdef program
+Rule 3     funcdef -> KEY_FN ID LPAREN argsdecl RPAREN type LBRACE statements RBRACE
+Rule 4     funcdef -> KEY_FN ID LPAREN argsdecl RPAREN LBRACE statements RBRACE
+Rule 5     argsdecl -> <empty>
+Rule 6     argsdecl -> argdecl
+Rule 7     argsdecl -> argdecl COMMA argsdecl
+Rule 8     argdecl -> ID COLON ID
+Rule 9     statements -> expression
+Rule 10    statements -> statement EOS statements
+Rule 11    statement -> assignment
+Rule 12    assignment -> ID ASSIGN expression
+Rule 13    assignment -> ID COLON ID ASSIGN expression
+Rule 14    expression -> LPAREN expression OP_ADD expression RPAREN
+Rule 15    expression -> LPAREN expression OP_SUB expression RPAREN
+Rule 16    expression -> LPAREN expression OP_MUL expression RPAREN
+Rule 17    expression -> LPAREN expression OP_DIV expression RPAREN
+Rule 18    expression -> CST_INT
+Rule 19    expression -> ID
+Rule 20    expression -> ID LBRACK CST_INT RBRACK
+Rule 21    expression -> ID LPAREN args RPAREN
+Rule 22    args -> <empty>
+Rule 23    args -> arg
+Rule 24    args -> arg COMMA args
+Rule 25    arg -> expression
+Rule 26    type -> TYPE_QINT LBRACK CST_INT RBRACK
+
+Terminals, with rules where they appear
+
+ASSIGN               : 12 13
+COLON                : 8 13
+COMMA                : 7 24
+CST_INT              : 18 20 26
+EOS                  : 10
+ID                   : 3 4 8 8 12 13 13 19 20 21
+KEY_ELSE             : 
+KEY_FN               : 3 4
+KEY_IF               : 
+LBRACE               : 3 4
+LBRACK               : 20 26
+LPAREN               : 3 4 14 15 16 17 21
+OP_ADD               : 14
+OP_DIV               : 17
+OP_MUL               : 16
+OP_SUB               : 15
+RBRACE               : 3 4
+RBRACK               : 20 26
+RPAREN               : 3 4 14 15 16 17 21
+TYPE_QINT            : 26
+error                : 
+
+Nonterminals, with rules where they appear
+
+arg                  : 23 24
+argdecl              : 6 7
+args                 : 21 24
+argsdecl             : 3 4 7
+assignment           : 11
+expression           : 9 12 13 14 14 15 15 16 16 17 17 25
+funcdef              : 2
+program              : 2 0
+statement            : 10
+statements           : 3 4 10
+type                 : 3
+
+Parsing method: LALR
+
+state 0
+
+    (0) S' -> . program
+    (1) program -> .
+    (2) program -> . funcdef program
+    (3) funcdef -> . KEY_FN ID LPAREN argsdecl RPAREN type LBRACE statements RBRACE
+    (4) funcdef -> . KEY_FN ID LPAREN argsdecl RPAREN LBRACE statements RBRACE
+
+    $end            reduce using rule 1 (program -> .)
+    KEY_FN          shift and go to state 3
+
+    program                        shift and go to state 1
+    funcdef                        shift and go to state 2
+
+state 1
+
+    (0) S' -> program .
+
+
+
+state 2
+
+    (2) program -> funcdef . program
+    (1) program -> .
+    (2) program -> . funcdef program
+    (3) funcdef -> . KEY_FN ID LPAREN argsdecl RPAREN type LBRACE statements RBRACE
+    (4) funcdef -> . KEY_FN ID LPAREN argsdecl RPAREN LBRACE statements RBRACE
+
+    $end            reduce using rule 1 (program -> .)
+    KEY_FN          shift and go to state 3
+
+    funcdef                        shift and go to state 2
+    program                        shift and go to state 4
+
+state 3
+
+    (3) funcdef -> KEY_FN . ID LPAREN argsdecl RPAREN type LBRACE statements RBRACE
+    (4) funcdef -> KEY_FN . ID LPAREN argsdecl RPAREN LBRACE statements RBRACE
+
+    ID              shift and go to state 5
+
+
+state 4
+
+    (2) program -> funcdef program .
+
+    $end            reduce using rule 2 (program -> funcdef program .)
+
+
+state 5
+
+    (3) funcdef -> KEY_FN ID . LPAREN argsdecl RPAREN type LBRACE statements RBRACE
+    (4) funcdef -> KEY_FN ID . LPAREN argsdecl RPAREN LBRACE statements RBRACE
+
+    LPAREN          shift and go to state 6
+
+
+state 6
+
+    (3) funcdef -> KEY_FN ID LPAREN . argsdecl RPAREN type LBRACE statements RBRACE
+    (4) funcdef -> KEY_FN ID LPAREN . argsdecl RPAREN LBRACE statements RBRACE
+    (5) argsdecl -> .
+    (6) argsdecl -> . argdecl
+    (7) argsdecl -> . argdecl COMMA argsdecl
+    (8) argdecl -> . ID COLON ID
+
+    RPAREN          reduce using rule 5 (argsdecl -> .)
+    ID              shift and go to state 7
+
+    argsdecl                       shift and go to state 8
+    argdecl                        shift and go to state 9
+
+state 7
+
+    (8) argdecl -> ID . COLON ID
+
+    COLON           shift and go to state 10
+
+
+state 8
+
+    (3) funcdef -> KEY_FN ID LPAREN argsdecl . RPAREN type LBRACE statements RBRACE
+    (4) funcdef -> KEY_FN ID LPAREN argsdecl . RPAREN LBRACE statements RBRACE
+
+    RPAREN          shift and go to state 11
+
+
+state 9
+
+    (6) argsdecl -> argdecl .
+    (7) argsdecl -> argdecl . COMMA argsdecl
+
+    RPAREN          reduce using rule 6 (argsdecl -> argdecl .)
+    COMMA           shift and go to state 12
+
+
+state 10
+
+    (8) argdecl -> ID COLON . ID
+
+    ID              shift and go to state 13
+
+
+state 11
+
+    (3) funcdef -> KEY_FN ID LPAREN argsdecl RPAREN . type LBRACE statements RBRACE
+    (4) funcdef -> KEY_FN ID LPAREN argsdecl RPAREN . LBRACE statements RBRACE
+    (26) type -> . TYPE_QINT LBRACK CST_INT RBRACK
+
+    LBRACE          shift and go to state 15
+    TYPE_QINT       shift and go to state 16
+
+    type                           shift and go to state 14
+
+state 12
+
+    (7) argsdecl -> argdecl COMMA . argsdecl
+    (5) argsdecl -> .
+    (6) argsdecl -> . argdecl
+    (7) argsdecl -> . argdecl COMMA argsdecl
+    (8) argdecl -> . ID COLON ID
+
+    RPAREN          reduce using rule 5 (argsdecl -> .)
+    ID              shift and go to state 7
+
+    argdecl                        shift and go to state 9
+    argsdecl                       shift and go to state 17
+
+state 13
+
+    (8) argdecl -> ID COLON ID .
+
+    COMMA           reduce using rule 8 (argdecl -> ID COLON ID .)
+    RPAREN          reduce using rule 8 (argdecl -> ID COLON ID .)
+
+
+state 14
+
+    (3) funcdef -> KEY_FN ID LPAREN argsdecl RPAREN type . LBRACE statements RBRACE
+
+    LBRACE          shift and go to state 18
+
+
+state 15
+
+    (4) funcdef -> KEY_FN ID LPAREN argsdecl RPAREN LBRACE . statements RBRACE
+    (9) statements -> . expression
+    (10) statements -> . statement EOS statements
+    (14) expression -> . LPAREN expression OP_ADD expression RPAREN
+    (15) expression -> . LPAREN expression OP_SUB expression RPAREN
+    (16) expression -> . LPAREN expression OP_MUL expression RPAREN
+    (17) expression -> . LPAREN expression OP_DIV expression RPAREN
+    (18) expression -> . CST_INT
+    (19) expression -> . ID
+    (20) expression -> . ID LBRACK CST_INT RBRACK
+    (21) expression -> . ID LPAREN args RPAREN
+    (11) statement -> . assignment
+    (12) assignment -> . ID ASSIGN expression
+    (13) assignment -> . ID COLON ID ASSIGN expression
+
+    LPAREN          shift and go to state 20
+    CST_INT         shift and go to state 24
+    ID              shift and go to state 19
+
+    statements                     shift and go to state 21
+    expression                     shift and go to state 22
+    statement                      shift and go to state 23
+    assignment                     shift and go to state 25
+
+state 16
+
+    (26) type -> TYPE_QINT . LBRACK CST_INT RBRACK
+
+    LBRACK          shift and go to state 26
+
+
+state 17
+
+    (7) argsdecl -> argdecl COMMA argsdecl .
+
+    RPAREN          reduce using rule 7 (argsdecl -> argdecl COMMA argsdecl .)
+
+
+state 18
+
+    (3) funcdef -> KEY_FN ID LPAREN argsdecl RPAREN type LBRACE . statements RBRACE
+    (9) statements -> . expression
+    (10) statements -> . statement EOS statements
+    (14) expression -> . LPAREN expression OP_ADD expression RPAREN
+    (15) expression -> . LPAREN expression OP_SUB expression RPAREN
+    (16) expression -> . LPAREN expression OP_MUL expression RPAREN
+    (17) expression -> . LPAREN expression OP_DIV expression RPAREN
+    (18) expression -> . CST_INT
+    (19) expression -> . ID
+    (20) expression -> . ID LBRACK CST_INT RBRACK
+    (21) expression -> . ID LPAREN args RPAREN
+    (11) statement -> . assignment
+    (12) assignment -> . ID ASSIGN expression
+    (13) assignment -> . ID COLON ID ASSIGN expression
+
+    LPAREN          shift and go to state 20
+    CST_INT         shift and go to state 24
+    ID              shift and go to state 19
+
+    statements                     shift and go to state 27
+    expression                     shift and go to state 22
+    statement                      shift and go to state 23
+    assignment                     shift and go to state 25
+
+state 19
+
+    (19) expression -> ID .
+    (20) expression -> ID . LBRACK CST_INT RBRACK
+    (21) expression -> ID . LPAREN args RPAREN
+    (12) assignment -> ID . ASSIGN expression
+    (13) assignment -> ID . COLON ID ASSIGN expression
+
+    RBRACE          reduce using rule 19 (expression -> ID .)
+    LBRACK          shift and go to state 28
+    LPAREN          shift and go to state 29
+    ASSIGN          shift and go to state 30
+    COLON           shift and go to state 31
+
+
+state 20
+
+    (14) expression -> LPAREN . expression OP_ADD expression RPAREN
+    (15) expression -> LPAREN . expression OP_SUB expression RPAREN
+    (16) expression -> LPAREN . expression OP_MUL expression RPAREN
+    (17) expression -> LPAREN . expression OP_DIV expression RPAREN
+    (14) expression -> . LPAREN expression OP_ADD expression RPAREN
+    (15) expression -> . LPAREN expression OP_SUB expression RPAREN
+    (16) expression -> . LPAREN expression OP_MUL expression RPAREN
+    (17) expression -> . LPAREN expression OP_DIV expression RPAREN
+    (18) expression -> . CST_INT
+    (19) expression -> . ID
+    (20) expression -> . ID LBRACK CST_INT RBRACK
+    (21) expression -> . ID LPAREN args RPAREN
+
+    LPAREN          shift and go to state 20
+    CST_INT         shift and go to state 24
+    ID              shift and go to state 33
+
+    expression                     shift and go to state 32
+
+state 21
+
+    (4) funcdef -> KEY_FN ID LPAREN argsdecl RPAREN LBRACE statements . RBRACE
+
+    RBRACE          shift and go to state 34
+
+
+state 22
+
+    (9) statements -> expression .
+
+    RBRACE          reduce using rule 9 (statements -> expression .)
+
+
+state 23
+
+    (10) statements -> statement . EOS statements
+
+    EOS             shift and go to state 35
+
+
+state 24
+
+    (18) expression -> CST_INT .
+
+    RBRACE          reduce using rule 18 (expression -> CST_INT .)
+    OP_ADD          reduce using rule 18 (expression -> CST_INT .)
+    OP_SUB          reduce using rule 18 (expression -> CST_INT .)
+    OP_MUL          reduce using rule 18 (expression -> CST_INT .)
+    OP_DIV          reduce using rule 18 (expression -> CST_INT .)
+    COMMA           reduce using rule 18 (expression -> CST_INT .)
+    RPAREN          reduce using rule 18 (expression -> CST_INT .)
+    EOS             reduce using rule 18 (expression -> CST_INT .)
+
+
+state 25
+
+    (11) statement -> assignment .
+
+    EOS             reduce using rule 11 (statement -> assignment .)
+
+
+state 26
+
+    (26) type -> TYPE_QINT LBRACK . CST_INT RBRACK
+
+    CST_INT         shift and go to state 36
+
+
+state 27
+
+    (3) funcdef -> KEY_FN ID LPAREN argsdecl RPAREN type LBRACE statements . RBRACE
+
+    RBRACE          shift and go to state 37
+
+
+state 28
+
+    (20) expression -> ID LBRACK . CST_INT RBRACK
+
+    CST_INT         shift and go to state 38
+
+
+state 29
+
+    (21) expression -> ID LPAREN . args RPAREN
+    (22) args -> .
+    (23) args -> . arg
+    (24) args -> . arg COMMA args
+    (25) arg -> . expression
+    (14) expression -> . LPAREN expression OP_ADD expression RPAREN
+    (15) expression -> . LPAREN expression OP_SUB expression RPAREN
+    (16) expression -> . LPAREN expression OP_MUL expression RPAREN
+    (17) expression -> . LPAREN expression OP_DIV expression RPAREN
+    (18) expression -> . CST_INT
+    (19) expression -> . ID
+    (20) expression -> . ID LBRACK CST_INT RBRACK
+    (21) expression -> . ID LPAREN args RPAREN
+
+    RPAREN          reduce using rule 22 (args -> .)
+    LPAREN          shift and go to state 20
+    CST_INT         shift and go to state 24
+    ID              shift and go to state 33
+
+    args                           shift and go to state 39
+    arg                            shift and go to state 40
+    expression                     shift and go to state 41
+
+state 30
+
+    (12) assignment -> ID ASSIGN . expression
+    (14) expression -> . LPAREN expression OP_ADD expression RPAREN
+    (15) expression -> . LPAREN expression OP_SUB expression RPAREN
+    (16) expression -> . LPAREN expression OP_MUL expression RPAREN
+    (17) expression -> . LPAREN expression OP_DIV expression RPAREN
+    (18) expression -> . CST_INT
+    (19) expression -> . ID
+    (20) expression -> . ID LBRACK CST_INT RBRACK
+    (21) expression -> . ID LPAREN args RPAREN
+
+    LPAREN          shift and go to state 20
+    CST_INT         shift and go to state 24
+    ID              shift and go to state 33
+
+    expression                     shift and go to state 42
+
+state 31
+
+    (13) assignment -> ID COLON . ID ASSIGN expression
+
+    ID              shift and go to state 43
+
+
+state 32
+
+    (14) expression -> LPAREN expression . OP_ADD expression RPAREN
+    (15) expression -> LPAREN expression . OP_SUB expression RPAREN
+    (16) expression -> LPAREN expression . OP_MUL expression RPAREN
+    (17) expression -> LPAREN expression . OP_DIV expression RPAREN
+
+    OP_ADD          shift and go to state 44
+    OP_SUB          shift and go to state 45
+    OP_MUL          shift and go to state 46
+    OP_DIV          shift and go to state 47
+
+
+state 33
+
+    (19) expression -> ID .
+    (20) expression -> ID . LBRACK CST_INT RBRACK
+    (21) expression -> ID . LPAREN args RPAREN
+
+    OP_ADD          reduce using rule 19 (expression -> ID .)
+    OP_SUB          reduce using rule 19 (expression -> ID .)
+    OP_MUL          reduce using rule 19 (expression -> ID .)
+    OP_DIV          reduce using rule 19 (expression -> ID .)
+    COMMA           reduce using rule 19 (expression -> ID .)
+    RPAREN          reduce using rule 19 (expression -> ID .)
+    EOS             reduce using rule 19 (expression -> ID .)
+    LBRACK          shift and go to state 28
+    LPAREN          shift and go to state 29
+
+
+state 34
+
+    (4) funcdef -> KEY_FN ID LPAREN argsdecl RPAREN LBRACE statements RBRACE .
+
+    KEY_FN          reduce using rule 4 (funcdef -> KEY_FN ID LPAREN argsdecl RPAREN LBRACE statements RBRACE .)
+    $end            reduce using rule 4 (funcdef -> KEY_FN ID LPAREN argsdecl RPAREN LBRACE statements RBRACE .)
+
+
+state 35
+
+    (10) statements -> statement EOS . statements
+    (9) statements -> . expression
+    (10) statements -> . statement EOS statements
+    (14) expression -> . LPAREN expression OP_ADD expression RPAREN
+    (15) expression -> . LPAREN expression OP_SUB expression RPAREN
+    (16) expression -> . LPAREN expression OP_MUL expression RPAREN
+    (17) expression -> . LPAREN expression OP_DIV expression RPAREN
+    (18) expression -> . CST_INT
+    (19) expression -> . ID
+    (20) expression -> . ID LBRACK CST_INT RBRACK
+    (21) expression -> . ID LPAREN args RPAREN
+    (11) statement -> . assignment
+    (12) assignment -> . ID ASSIGN expression
+    (13) assignment -> . ID COLON ID ASSIGN expression
+
+    LPAREN          shift and go to state 20
+    CST_INT         shift and go to state 24
+    ID              shift and go to state 19
+
+    statement                      shift and go to state 23
+    statements                     shift and go to state 48
+    expression                     shift and go to state 22
+    assignment                     shift and go to state 25
+
+state 36
+
+    (26) type -> TYPE_QINT LBRACK CST_INT . RBRACK
+
+    RBRACK          shift and go to state 49
+
+
+state 37
+
+    (3) funcdef -> KEY_FN ID LPAREN argsdecl RPAREN type LBRACE statements RBRACE .
+
+    KEY_FN          reduce using rule 3 (funcdef -> KEY_FN ID LPAREN argsdecl RPAREN type LBRACE statements RBRACE .)
+    $end            reduce using rule 3 (funcdef -> KEY_FN ID LPAREN argsdecl RPAREN type LBRACE statements RBRACE .)
+
+
+state 38
+
+    (20) expression -> ID LBRACK CST_INT . RBRACK
+
+    RBRACK          shift and go to state 50
+
+
+state 39
+
+    (21) expression -> ID LPAREN args . RPAREN
+
+    RPAREN          shift and go to state 51
+
+
+state 40
+
+    (23) args -> arg .
+    (24) args -> arg . COMMA args
+
+    RPAREN          reduce using rule 23 (args -> arg .)
+    COMMA           shift and go to state 52
+
+
+state 41
+
+    (25) arg -> expression .
+
+    COMMA           reduce using rule 25 (arg -> expression .)
+    RPAREN          reduce using rule 25 (arg -> expression .)
+
+
+state 42
+
+    (12) assignment -> ID ASSIGN expression .
+
+    EOS             reduce using rule 12 (assignment -> ID ASSIGN expression .)
+
+
+state 43
+
+    (13) assignment -> ID COLON ID . ASSIGN expression
+
+    ASSIGN          shift and go to state 53
+
+
+state 44
+
+    (14) expression -> LPAREN expression OP_ADD . expression RPAREN
+    (14) expression -> . LPAREN expression OP_ADD expression RPAREN
+    (15) expression -> . LPAREN expression OP_SUB expression RPAREN
+    (16) expression -> . LPAREN expression OP_MUL expression RPAREN
+    (17) expression -> . LPAREN expression OP_DIV expression RPAREN
+    (18) expression -> . CST_INT
+    (19) expression -> . ID
+    (20) expression -> . ID LBRACK CST_INT RBRACK
+    (21) expression -> . ID LPAREN args RPAREN
+
+    LPAREN          shift and go to state 20
+    CST_INT         shift and go to state 24
+    ID              shift and go to state 33
+
+    expression                     shift and go to state 54
+
+state 45
+
+    (15) expression -> LPAREN expression OP_SUB . expression RPAREN
+    (14) expression -> . LPAREN expression OP_ADD expression RPAREN
+    (15) expression -> . LPAREN expression OP_SUB expression RPAREN
+    (16) expression -> . LPAREN expression OP_MUL expression RPAREN
+    (17) expression -> . LPAREN expression OP_DIV expression RPAREN
+    (18) expression -> . CST_INT
+    (19) expression -> . ID
+    (20) expression -> . ID LBRACK CST_INT RBRACK
+    (21) expression -> . ID LPAREN args RPAREN
+
+    LPAREN          shift and go to state 20
+    CST_INT         shift and go to state 24
+    ID              shift and go to state 33
+
+    expression                     shift and go to state 55
+
+state 46
+
+    (16) expression -> LPAREN expression OP_MUL . expression RPAREN
+    (14) expression -> . LPAREN expression OP_ADD expression RPAREN
+    (15) expression -> . LPAREN expression OP_SUB expression RPAREN
+    (16) expression -> . LPAREN expression OP_MUL expression RPAREN
+    (17) expression -> . LPAREN expression OP_DIV expression RPAREN
+    (18) expression -> . CST_INT
+    (19) expression -> . ID
+    (20) expression -> . ID LBRACK CST_INT RBRACK
+    (21) expression -> . ID LPAREN args RPAREN
+
+    LPAREN          shift and go to state 20
+    CST_INT         shift and go to state 24
+    ID              shift and go to state 33
+
+    expression                     shift and go to state 56
+
+state 47
+
+    (17) expression -> LPAREN expression OP_DIV . expression RPAREN
+    (14) expression -> . LPAREN expression OP_ADD expression RPAREN
+    (15) expression -> . LPAREN expression OP_SUB expression RPAREN
+    (16) expression -> . LPAREN expression OP_MUL expression RPAREN
+    (17) expression -> . LPAREN expression OP_DIV expression RPAREN
+    (18) expression -> . CST_INT
+    (19) expression -> . ID
+    (20) expression -> . ID LBRACK CST_INT RBRACK
+    (21) expression -> . ID LPAREN args RPAREN
+
+    LPAREN          shift and go to state 20
+    CST_INT         shift and go to state 24
+    ID              shift and go to state 33
+
+    expression                     shift and go to state 57
+
+state 48
+
+    (10) statements -> statement EOS statements .
+
+    RBRACE          reduce using rule 10 (statements -> statement EOS statements .)
+
+
+state 49
+
+    (26) type -> TYPE_QINT LBRACK CST_INT RBRACK .
+
+    LBRACE          reduce using rule 26 (type -> TYPE_QINT LBRACK CST_INT RBRACK .)
+
+
+state 50
+
+    (20) expression -> ID LBRACK CST_INT RBRACK .
+
+    RBRACE          reduce using rule 20 (expression -> ID LBRACK CST_INT RBRACK .)
+    OP_ADD          reduce using rule 20 (expression -> ID LBRACK CST_INT RBRACK .)
+    OP_SUB          reduce using rule 20 (expression -> ID LBRACK CST_INT RBRACK .)
+    OP_MUL          reduce using rule 20 (expression -> ID LBRACK CST_INT RBRACK .)
+    OP_DIV          reduce using rule 20 (expression -> ID LBRACK CST_INT RBRACK .)
+    COMMA           reduce using rule 20 (expression -> ID LBRACK CST_INT RBRACK .)
+    RPAREN          reduce using rule 20 (expression -> ID LBRACK CST_INT RBRACK .)
+    EOS             reduce using rule 20 (expression -> ID LBRACK CST_INT RBRACK .)
+
+
+state 51
+
+    (21) expression -> ID LPAREN args RPAREN .
+
+    RBRACE          reduce using rule 21 (expression -> ID LPAREN args RPAREN .)
+    OP_ADD          reduce using rule 21 (expression -> ID LPAREN args RPAREN .)
+    OP_SUB          reduce using rule 21 (expression -> ID LPAREN args RPAREN .)
+    OP_MUL          reduce using rule 21 (expression -> ID LPAREN args RPAREN .)
+    OP_DIV          reduce using rule 21 (expression -> ID LPAREN args RPAREN .)
+    COMMA           reduce using rule 21 (expression -> ID LPAREN args RPAREN .)
+    RPAREN          reduce using rule 21 (expression -> ID LPAREN args RPAREN .)
+    EOS             reduce using rule 21 (expression -> ID LPAREN args RPAREN .)
+
+
+state 52
+
+    (24) args -> arg COMMA . args
+    (22) args -> .
+    (23) args -> . arg
+    (24) args -> . arg COMMA args
+    (25) arg -> . expression
+    (14) expression -> . LPAREN expression OP_ADD expression RPAREN
+    (15) expression -> . LPAREN expression OP_SUB expression RPAREN
+    (16) expression -> . LPAREN expression OP_MUL expression RPAREN
+    (17) expression -> . LPAREN expression OP_DIV expression RPAREN
+    (18) expression -> . CST_INT
+    (19) expression -> . ID
+    (20) expression -> . ID LBRACK CST_INT RBRACK
+    (21) expression -> . ID LPAREN args RPAREN
+
+    RPAREN          reduce using rule 22 (args -> .)
+    LPAREN          shift and go to state 20
+    CST_INT         shift and go to state 24
+    ID              shift and go to state 33
+
+    arg                            shift and go to state 40
+    args                           shift and go to state 58
+    expression                     shift and go to state 41
+
+state 53
+
+    (13) assignment -> ID COLON ID ASSIGN . expression
+    (14) expression -> . LPAREN expression OP_ADD expression RPAREN
+    (15) expression -> . LPAREN expression OP_SUB expression RPAREN
+    (16) expression -> . LPAREN expression OP_MUL expression RPAREN
+    (17) expression -> . LPAREN expression OP_DIV expression RPAREN
+    (18) expression -> . CST_INT
+    (19) expression -> . ID
+    (20) expression -> . ID LBRACK CST_INT RBRACK
+    (21) expression -> . ID LPAREN args RPAREN
+
+    LPAREN          shift and go to state 20
+    CST_INT         shift and go to state 24
+    ID              shift and go to state 33
+
+    expression                     shift and go to state 59
+
+state 54
+
+    (14) expression -> LPAREN expression OP_ADD expression . RPAREN
+
+    RPAREN          shift and go to state 60
+
+
+state 55
+
+    (15) expression -> LPAREN expression OP_SUB expression . RPAREN
+
+    RPAREN          shift and go to state 61
+
+
+state 56
+
+    (16) expression -> LPAREN expression OP_MUL expression . RPAREN
+
+    RPAREN          shift and go to state 62
+
+
+state 57
+
+    (17) expression -> LPAREN expression OP_DIV expression . RPAREN
+
+    RPAREN          shift and go to state 63
+
+
+state 58
+
+    (24) args -> arg COMMA args .
+
+    RPAREN          reduce using rule 24 (args -> arg COMMA args .)
+
+
+state 59
+
+    (13) assignment -> ID COLON ID ASSIGN expression .
+
+    EOS             reduce using rule 13 (assignment -> ID COLON ID ASSIGN expression .)
+
+
+state 60
+
+    (14) expression -> LPAREN expression OP_ADD expression RPAREN .
+
+    RBRACE          reduce using rule 14 (expression -> LPAREN expression OP_ADD expression RPAREN .)
+    OP_ADD          reduce using rule 14 (expression -> LPAREN expression OP_ADD expression RPAREN .)
+    OP_SUB          reduce using rule 14 (expression -> LPAREN expression OP_ADD expression RPAREN .)
+    OP_MUL          reduce using rule 14 (expression -> LPAREN expression OP_ADD expression RPAREN .)
+    OP_DIV          reduce using rule 14 (expression -> LPAREN expression OP_ADD expression RPAREN .)
+    COMMA           reduce using rule 14 (expression -> LPAREN expression OP_ADD expression RPAREN .)
+    RPAREN          reduce using rule 14 (expression -> LPAREN expression OP_ADD expression RPAREN .)
+    EOS             reduce using rule 14 (expression -> LPAREN expression OP_ADD expression RPAREN .)
+
+
+state 61
+
+    (15) expression -> LPAREN expression OP_SUB expression RPAREN .
+
+    RBRACE          reduce using rule 15 (expression -> LPAREN expression OP_SUB expression RPAREN .)
+    OP_ADD          reduce using rule 15 (expression -> LPAREN expression OP_SUB expression RPAREN .)
+    OP_SUB          reduce using rule 15 (expression -> LPAREN expression OP_SUB expression RPAREN .)
+    OP_MUL          reduce using rule 15 (expression -> LPAREN expression OP_SUB expression RPAREN .)
+    OP_DIV          reduce using rule 15 (expression -> LPAREN expression OP_SUB expression RPAREN .)
+    COMMA           reduce using rule 15 (expression -> LPAREN expression OP_SUB expression RPAREN .)
+    RPAREN          reduce using rule 15 (expression -> LPAREN expression OP_SUB expression RPAREN .)
+    EOS             reduce using rule 15 (expression -> LPAREN expression OP_SUB expression RPAREN .)
+
+
+state 62
+
+    (16) expression -> LPAREN expression OP_MUL expression RPAREN .
+
+    RBRACE          reduce using rule 16 (expression -> LPAREN expression OP_MUL expression RPAREN .)
+    OP_ADD          reduce using rule 16 (expression -> LPAREN expression OP_MUL expression RPAREN .)
+    OP_SUB          reduce using rule 16 (expression -> LPAREN expression OP_MUL expression RPAREN .)
+    OP_MUL          reduce using rule 16 (expression -> LPAREN expression OP_MUL expression RPAREN .)
+    OP_DIV          reduce using rule 16 (expression -> LPAREN expression OP_MUL expression RPAREN .)
+    COMMA           reduce using rule 16 (expression -> LPAREN expression OP_MUL expression RPAREN .)
+    RPAREN          reduce using rule 16 (expression -> LPAREN expression OP_MUL expression RPAREN .)
+    EOS             reduce using rule 16 (expression -> LPAREN expression OP_MUL expression RPAREN .)
+
+
+state 63
+
+    (17) expression -> LPAREN expression OP_DIV expression RPAREN .
+
+    RBRACE          reduce using rule 17 (expression -> LPAREN expression OP_DIV expression RPAREN .)
+    OP_ADD          reduce using rule 17 (expression -> LPAREN expression OP_DIV expression RPAREN .)
+    OP_SUB          reduce using rule 17 (expression -> LPAREN expression OP_DIV expression RPAREN .)
+    OP_MUL          reduce using rule 17 (expression -> LPAREN expression OP_DIV expression RPAREN .)
+    OP_DIV          reduce using rule 17 (expression -> LPAREN expression OP_DIV expression RPAREN .)
+    COMMA           reduce using rule 17 (expression -> LPAREN expression OP_DIV expression RPAREN .)
+    RPAREN          reduce using rule 17 (expression -> LPAREN expression OP_DIV expression RPAREN .)
+    EOS             reduce using rule 17 (expression -> LPAREN expression OP_DIV expression RPAREN .)
+
