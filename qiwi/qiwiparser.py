@@ -1,15 +1,33 @@
 from .qiwilexer import tokens
  
 from . import qiwiast
-
+import __main__
 start = 'program'
 
-def p_program_blank(p):
-    'program :'
+def p_program_import_fnprogram(p):
+    'program : imports fnprogram'
+    __main__.use_files = p[1]
+    #print(p[1])
+    p[0] = p[2]
+
+def p_imports_import_imports(p):
+    'imports : import imports'
+    p[0] = p[1] + p[2]
+    
+def p_imports_blank(p):
+    'imports : '
     p[0] = []
 
-def p_program_functions(p):
-    'program : funcdef program'
+def p_import_use(p):
+    'import : KEY_USE ID EOS'
+    p[0] = [((p[2]+".txt"),"self")]
+
+def p_fnprogram_blank(p):
+    'fnprogram :'
+    p[0] = []
+
+def p_fnprogram_functions(p):
+    'fnprogram : funcdef fnprogram'
     p[0] = [p[1]] + p[2]
 
 def p_funcdef(p):
@@ -89,6 +107,10 @@ def p_expression_indexedid(p):
 def p_expression_call(p):
     'expression : ID LPAREN args RPAREN'
     p[0] = qiwiast.ASTFuncCall(qiwiast.ASTID(p[1]), p[3])
+
+def p_expression_import_call(p):
+    'expression : ID COLON ID LPAREN args RPAREN'
+    p[0] = qiwiast.ASTFuncCall(qiwiast.ASTID(p[3]), p[5],p[1])
 
 def p_args_null(p):
     'args :'

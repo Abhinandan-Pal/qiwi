@@ -24,19 +24,21 @@ class ASTTypeQ(ASTNode):
 
 class ASTID(ASTExp):
     name: str
+    name_space: str
 
-    def __init__(self, name: str) -> None:
+    def __init__(self, name: str,name_space: Optional[str] = "self") -> None:
         self.name = name
+        self.name_space = name_space
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({self.name})"
+        return f"{self.__class__.__name__}({self.name_space}.{self.name})"
 
     def generate(self, context: qiwicg.Context) -> qiwicg.QFunction | qiwicg.QDynamicFunction | qiwicg.QBlock:
         if context.lookup_variable(self.name):
             block = qiwicg.QBlock()
             block.output = context.lookup_variable(self.name)
             return block
-        return context.lookup_function(self.name)
+        return context.lookup_function(self.name,self.name_space)
 
 class ASTIndexedID(ASTExp):
     name: str
@@ -188,14 +190,16 @@ class ASTFuncDef(ASTNode):
 
 class ASTFuncCall(ASTExp):
     name: ASTID
+    name_space: str
     args: list[ASTExp]
 
-    def __init__(self, name: ASTID, args: list[ASTExp]) -> None:
+    def __init__(self, name: ASTID, args: list[ASTExp],name_space: Optional[str] = "self") -> None:
         self.name = name
         self.args = args
+        self.name_space = name_space
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({self.name}, {self.args})"
+        return f"{self.__class__.__name__}({self.name_space}.{self.name}, {self.args})"
 
     def generate(self, context: qiwicg.Context) -> qiwicg.QBlock:
         block = qiwicg.QBlock()
@@ -206,7 +210,7 @@ class ASTFuncCall(ASTExp):
             block.append(argblock)
             argloc.append(argblock.output)
         
-        func = context.lookup_function(self.name.name)
+        func = context.lookup_function(self.name.name, self.name_space)
         if isinstance(func, qiwicg.QFunction):
             body = func.generate(context, argloc)
         elif isinstance(func, qiwicg.QDynamicFunction):

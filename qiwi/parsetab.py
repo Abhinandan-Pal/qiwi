@@ -6,9 +6,9 @@ _tabversion = '3.10'
 
 _lr_method = 'LALR'
 
-_lr_signature = 'programASSIGN COLON COMMA CST_INT EOS ID KEY_ELSE KEY_FN KEY_IF LBRACE LBRACK LPAREN OP_ADD OP_DIV OP_MUL OP_SUB RBRACE RBRACK RPAREN TYPE_QINTprogram :program : funcdef programfuncdef : KEY_FN ID LPAREN argsdecl RPAREN type LBRACE statements RBRACEfuncdef : KEY_FN ID LPAREN argsdecl RPAREN LBRACE statements RBRACEargsdecl :argsdecl : argdeclargsdecl : argdecl COMMA argsdeclargdecl : ID COLON IDstatements : expressionstatements : statement EOS statementsstatement : assignmentassignment : ID ASSIGN expressionassignment : ID COLON ID ASSIGN expressionexpression : LPAREN expression OP_ADD expression RPAREN\n                  | LPAREN expression OP_SUB expression RPAREN\n                  | LPAREN expression OP_MUL expression RPAREN\n                  | LPAREN expression OP_DIV expression RPARENexpression : CST_INTexpression : IDexpression : ID LBRACK CST_INT RBRACKexpression : ID LPAREN args RPARENargs :args : argargs : arg COMMA argsarg : expressiontype : TYPE_QINT LBRACK CST_INT RBRACK'
+_lr_signature = 'programASSIGN COLON COMMA CST_INT EOS ID KEY_ELSE KEY_FN KEY_IF KEY_USE LBRACE LBRACK LPAREN OP_ADD OP_DIV OP_MUL OP_SUB RBRACE RBRACK RPAREN TYPE_QINTprogram : imports fnprogramimports : import importsimports : import : KEY_USE ID EOSfnprogram :fnprogram : funcdef fnprogramfuncdef : KEY_FN ID LPAREN argsdecl RPAREN type LBRACE statements RBRACEfuncdef : KEY_FN ID LPAREN argsdecl RPAREN LBRACE statements RBRACEargsdecl :argsdecl : argdeclargsdecl : argdecl COMMA argsdeclargdecl : ID COLON IDstatements : expressionstatements : statement EOS statementsstatement : assignmentassignment : ID ASSIGN expressionassignment : ID COLON ID ASSIGN expressionexpression : LPAREN expression OP_ADD expression RPAREN\n                  | LPAREN expression OP_SUB expression RPAREN\n                  | LPAREN expression OP_MUL expression RPAREN\n                  | LPAREN expression OP_DIV expression RPARENexpression : CST_INTexpression : IDexpression : ID LBRACK CST_INT RBRACKexpression : ID LPAREN args RPARENexpression : ID COLON ID LPAREN args RPARENargs :args : argargs : arg COMMA argsarg : expressiontype : TYPE_QINT LBRACK CST_INT RBRACK'
     
-_lr_action_items = {'$end':([0,1,2,4,34,37,],[-1,0,-1,-2,-4,-3,]),'KEY_FN':([0,2,34,37,],[3,3,-4,-3,]),'ID':([3,6,10,12,15,18,20,29,30,31,35,44,45,46,47,52,53,],[5,7,13,7,19,19,33,33,33,43,19,33,33,33,33,33,33,]),'LPAREN':([5,15,18,19,20,29,30,33,35,44,45,46,47,52,53,],[6,20,20,29,20,20,20,29,20,20,20,20,20,20,20,]),'RPAREN':([6,8,9,12,13,17,24,29,33,39,40,41,50,51,52,54,55,56,57,58,60,61,62,63,],[-5,11,-6,-5,-8,-7,-18,-22,-19,51,-23,-25,-20,-21,-22,60,61,62,63,-24,-14,-15,-16,-17,]),'COLON':([7,19,],[10,31,]),'COMMA':([9,13,24,33,40,41,50,51,60,61,62,63,],[12,-8,-18,-19,52,-25,-20,-21,-14,-15,-16,-17,]),'LBRACE':([11,14,49,],[15,18,-26,]),'TYPE_QINT':([11,],[16,]),'CST_INT':([15,18,20,26,28,29,30,35,44,45,46,47,52,53,],[24,24,24,36,38,24,24,24,24,24,24,24,24,24,]),'LBRACK':([16,19,33,],[26,28,28,]),'RBRACE':([19,21,22,24,27,48,50,51,60,61,62,63,],[-19,34,-9,-18,37,-10,-20,-21,-14,-15,-16,-17,]),'ASSIGN':([19,43,],[30,53,]),'EOS':([23,24,25,33,42,50,51,59,60,61,62,63,],[35,-18,-11,-19,-12,-20,-21,-13,-14,-15,-16,-17,]),'OP_ADD':([24,32,33,50,51,60,61,62,63,],[-18,44,-19,-20,-21,-14,-15,-16,-17,]),'OP_SUB':([24,32,33,50,51,60,61,62,63,],[-18,45,-19,-20,-21,-14,-15,-16,-17,]),'OP_MUL':([24,32,33,50,51,60,61,62,63,],[-18,46,-19,-20,-21,-14,-15,-16,-17,]),'OP_DIV':([24,32,33,50,51,60,61,62,63,],[-18,47,-19,-20,-21,-14,-15,-16,-17,]),'RBRACK':([36,38,],[49,50,]),}
+_lr_action_items = {'KEY_FN':([0,2,3,6,8,12,41,44,],[-3,7,-3,7,-2,-4,-8,-7,]),'$end':([0,1,2,3,5,6,8,10,12,41,44,],[-3,0,-5,-3,-1,-5,-2,-6,-4,-8,-7,]),'KEY_USE':([0,3,12,],[4,4,-4,]),'ID':([4,7,13,17,19,22,25,27,36,37,38,42,51,52,53,54,55,60,61,62,],[9,11,14,20,14,26,26,40,40,49,40,26,40,40,40,40,67,40,40,40,]),'EOS':([9,30,31,32,40,50,58,59,70,71,72,73,74,75,],[12,42,-22,-15,-23,-16,-24,-25,-17,-18,-19,-20,-21,-26,]),'LPAREN':([11,22,25,26,27,36,38,40,42,49,51,52,53,54,60,61,62,67,],[13,27,27,36,27,27,27,36,27,61,27,27,27,27,27,27,27,61,]),'RPAREN':([13,15,16,19,20,24,31,36,40,46,47,48,58,59,60,61,63,64,65,66,68,69,71,72,73,74,75,],[-9,18,-10,-9,-12,-11,-22,-27,-23,59,-28,-30,-24,-25,-27,-27,71,72,73,74,-29,75,-18,-19,-20,-21,-26,]),'COLON':([14,26,40,],[17,37,55,]),'COMMA':([16,20,31,40,47,48,58,59,71,72,73,74,75,],[19,-12,-22,-23,60,-30,-24,-25,-18,-19,-20,-21,-26,]),'LBRACE':([18,21,57,],[22,25,-31,]),'TYPE_QINT':([18,],[23,]),'CST_INT':([22,25,27,33,35,36,38,42,51,52,53,54,60,61,62,],[31,31,31,43,45,31,31,31,31,31,31,31,31,31,31,]),'LBRACK':([23,26,40,],[33,35,35,]),'RBRACE':([26,28,29,31,34,56,58,59,71,72,73,74,75,],[-23,41,-13,-22,44,-14,-24,-25,-18,-19,-20,-21,-26,]),'ASSIGN':([26,49,],[38,62,]),'OP_ADD':([31,39,40,58,59,71,72,73,74,75,],[-22,51,-23,-24,-25,-18,-19,-20,-21,-26,]),'OP_SUB':([31,39,40,58,59,71,72,73,74,75,],[-22,52,-23,-24,-25,-18,-19,-20,-21,-26,]),'OP_MUL':([31,39,40,58,59,71,72,73,74,75,],[-22,53,-23,-24,-25,-18,-19,-20,-21,-26,]),'OP_DIV':([31,39,40,58,59,71,72,73,74,75,],[-22,54,-23,-24,-25,-18,-19,-20,-21,-26,]),'RBRACK':([43,45,],[57,58,]),}
 
 _lr_action = {}
 for _k, _v in _lr_action_items.items():
@@ -17,7 +17,7 @@ for _k, _v in _lr_action_items.items():
       _lr_action[_x][_k] = _y
 del _lr_action_items
 
-_lr_goto_items = {'program':([0,2,],[1,4,]),'funcdef':([0,2,],[2,2,]),'argsdecl':([6,12,],[8,17,]),'argdecl':([6,12,],[9,9,]),'type':([11,],[14,]),'statements':([15,18,35,],[21,27,48,]),'expression':([15,18,20,29,30,35,44,45,46,47,52,53,],[22,22,32,41,42,22,54,55,56,57,41,59,]),'statement':([15,18,35,],[23,23,23,]),'assignment':([15,18,35,],[25,25,25,]),'args':([29,52,],[39,58,]),'arg':([29,52,],[40,40,]),}
+_lr_goto_items = {'program':([0,],[1,]),'imports':([0,3,],[2,8,]),'import':([0,3,],[3,3,]),'fnprogram':([2,6,],[5,10,]),'funcdef':([2,6,],[6,6,]),'argsdecl':([13,19,],[15,24,]),'argdecl':([13,19,],[16,16,]),'type':([18,],[21,]),'statements':([22,25,42,],[28,34,56,]),'expression':([22,25,27,36,38,42,51,52,53,54,60,61,62,],[29,29,39,48,50,29,63,64,65,66,48,48,70,]),'statement':([22,25,42,],[30,30,30,]),'assignment':([22,25,42,],[32,32,32,]),'args':([36,60,61,],[46,68,69,]),'arg':([36,60,61,],[47,47,47,]),}
 
 _lr_goto = {}
 for _k, _v in _lr_goto_items.items():
@@ -27,30 +27,35 @@ for _k, _v in _lr_goto_items.items():
 del _lr_goto_items
 _lr_productions = [
   ("S' -> program","S'",1,None,None,None),
-  ('program -> <empty>','program',0,'p_program_blank','qiwiparser.py',8),
-  ('program -> funcdef program','program',2,'p_program_functions','qiwiparser.py',12),
-  ('funcdef -> KEY_FN ID LPAREN argsdecl RPAREN type LBRACE statements RBRACE','funcdef',9,'p_funcdef','qiwiparser.py',16),
-  ('funcdef -> KEY_FN ID LPAREN argsdecl RPAREN LBRACE statements RBRACE','funcdef',8,'p_funcdef_void','qiwiparser.py',20),
-  ('argsdecl -> <empty>','argsdecl',0,'p_argsdecl_null','qiwiparser.py',24),
-  ('argsdecl -> argdecl','argsdecl',1,'p_argsdecl_argdecl','qiwiparser.py',28),
-  ('argsdecl -> argdecl COMMA argsdecl','argsdecl',3,'p_argsdecl_argdecls','qiwiparser.py',32),
-  ('argdecl -> ID COLON ID','argdecl',3,'p_argdecl','qiwiparser.py',36),
-  ('statements -> expression','statements',1,'p_statements_expression','qiwiparser.py',44),
-  ('statements -> statement EOS statements','statements',3,'p_statements_statements','qiwiparser.py',48),
-  ('statement -> assignment','statement',1,'p_statement','qiwiparser.py',52),
-  ('assignment -> ID ASSIGN expression','assignment',3,'p_assignment','qiwiparser.py',56),
-  ('assignment -> ID COLON ID ASSIGN expression','assignment',5,'p_assignment_typed','qiwiparser.py',60),
-  ('expression -> LPAREN expression OP_ADD expression RPAREN','expression',5,'p_expression_arithmatic','qiwiparser.py',68),
-  ('expression -> LPAREN expression OP_SUB expression RPAREN','expression',5,'p_expression_arithmatic','qiwiparser.py',69),
-  ('expression -> LPAREN expression OP_MUL expression RPAREN','expression',5,'p_expression_arithmatic','qiwiparser.py',70),
-  ('expression -> LPAREN expression OP_DIV expression RPAREN','expression',5,'p_expression_arithmatic','qiwiparser.py',71),
-  ('expression -> CST_INT','expression',1,'p_expression_number','qiwiparser.py',75),
-  ('expression -> ID','expression',1,'p_expression_id','qiwiparser.py',79),
-  ('expression -> ID LBRACK CST_INT RBRACK','expression',4,'p_expression_indexedid','qiwiparser.py',83),
-  ('expression -> ID LPAREN args RPAREN','expression',4,'p_expression_call','qiwiparser.py',87),
-  ('args -> <empty>','args',0,'p_args_null','qiwiparser.py',91),
-  ('args -> arg','args',1,'p_args_arg','qiwiparser.py',95),
-  ('args -> arg COMMA args','args',3,'p_args_args','qiwiparser.py',99),
-  ('arg -> expression','arg',1,'p_arg','qiwiparser.py',103),
-  ('type -> TYPE_QINT LBRACK CST_INT RBRACK','type',4,'p_type_len','qiwiparser.py',111),
+  ('program -> imports fnprogram','program',2,'p_program_import_fnprogram','qiwiparser.py',8),
+  ('imports -> import imports','imports',2,'p_imports_import_imports','qiwiparser.py',14),
+  ('imports -> <empty>','imports',0,'p_imports_blank','qiwiparser.py',18),
+  ('import -> KEY_USE ID EOS','import',3,'p_import_use','qiwiparser.py',22),
+  ('fnprogram -> <empty>','fnprogram',0,'p_fnprogram_blank','qiwiparser.py',26),
+  ('fnprogram -> funcdef fnprogram','fnprogram',2,'p_fnprogram_functions','qiwiparser.py',30),
+  ('funcdef -> KEY_FN ID LPAREN argsdecl RPAREN type LBRACE statements RBRACE','funcdef',9,'p_funcdef','qiwiparser.py',34),
+  ('funcdef -> KEY_FN ID LPAREN argsdecl RPAREN LBRACE statements RBRACE','funcdef',8,'p_funcdef_void','qiwiparser.py',38),
+  ('argsdecl -> <empty>','argsdecl',0,'p_argsdecl_null','qiwiparser.py',42),
+  ('argsdecl -> argdecl','argsdecl',1,'p_argsdecl_argdecl','qiwiparser.py',46),
+  ('argsdecl -> argdecl COMMA argsdecl','argsdecl',3,'p_argsdecl_argdecls','qiwiparser.py',50),
+  ('argdecl -> ID COLON ID','argdecl',3,'p_argdecl','qiwiparser.py',54),
+  ('statements -> expression','statements',1,'p_statements_expression','qiwiparser.py',65),
+  ('statements -> statement EOS statements','statements',3,'p_statements_statements','qiwiparser.py',69),
+  ('statement -> assignment','statement',1,'p_statement','qiwiparser.py',73),
+  ('assignment -> ID ASSIGN expression','assignment',3,'p_assignment','qiwiparser.py',77),
+  ('assignment -> ID COLON ID ASSIGN expression','assignment',5,'p_assignment_typed','qiwiparser.py',81),
+  ('expression -> LPAREN expression OP_ADD expression RPAREN','expression',5,'p_expression_arithmatic','qiwiparser.py',89),
+  ('expression -> LPAREN expression OP_SUB expression RPAREN','expression',5,'p_expression_arithmatic','qiwiparser.py',90),
+  ('expression -> LPAREN expression OP_MUL expression RPAREN','expression',5,'p_expression_arithmatic','qiwiparser.py',91),
+  ('expression -> LPAREN expression OP_DIV expression RPAREN','expression',5,'p_expression_arithmatic','qiwiparser.py',92),
+  ('expression -> CST_INT','expression',1,'p_expression_number','qiwiparser.py',96),
+  ('expression -> ID','expression',1,'p_expression_id','qiwiparser.py',100),
+  ('expression -> ID LBRACK CST_INT RBRACK','expression',4,'p_expression_indexedid','qiwiparser.py',104),
+  ('expression -> ID LPAREN args RPAREN','expression',4,'p_expression_call','qiwiparser.py',108),
+  ('expression -> ID COLON ID LPAREN args RPAREN','expression',6,'p_expression_import_call','qiwiparser.py',112),
+  ('args -> <empty>','args',0,'p_args_null','qiwiparser.py',116),
+  ('args -> arg','args',1,'p_args_arg','qiwiparser.py',120),
+  ('args -> arg COMMA args','args',3,'p_args_args','qiwiparser.py',124),
+  ('arg -> expression','arg',1,'p_arg','qiwiparser.py',128),
+  ('type -> TYPE_QINT LBRACK CST_INT RBRACK','type',4,'p_type_len','qiwiparser.py',136),
 ]

@@ -1,8 +1,8 @@
 from __future__ import annotations
-from typing import Callable, cast
+from typing import Callable, cast, Optional
 
 from . import qiwiast
-
+import __main__
 class QGate:
     name: str
     connections: list[int]
@@ -93,7 +93,7 @@ builtin_functions = {
 }
 
 class Context:
-    functions: dict[str, QFunction]
+    functions: dict[(str,str), QFunction]      # name,name_space to function
     used_qbits: int
     scope: dict[str, list[int]]
 
@@ -108,14 +108,14 @@ class Context:
         return bits
 
     def add_function(self, name: str, function: QFunction):
-        self.functions[name] = function
+        self.functions[(name, __main__.current_name_space)] = function
 
-    def lookup_function(self, name: str) -> QFunction | QDynamicFunction:
+    def lookup_function(self, name: str , name_space: Optional[str] = "self" ) -> QFunction | QDynamicFunction:
         if builtin_functions.get(name):
             return builtin_functions[name]
         
-        if self.functions.get(name):
-            return self.functions[name]
+        if self.functions.get((name,name_space)):
+            return self.functions[(name,name_space)]
 
         raise RuntimeError(f"Cannot find function named: {name}")
 

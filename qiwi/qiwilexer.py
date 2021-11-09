@@ -2,6 +2,7 @@ reserved_keywords = {
    'fn'   : 'KEY_FN',
    'if'   : 'KEY_IF',
    'else' : 'KEY_ELSE',
+   'use' : 'KEY_USE',
 }
 
 # token names
@@ -47,6 +48,7 @@ t_EOS    = r';'
 t_KEY_FN   = r'fn'
 t_KEY_IF   = r'if'
 t_KEY_ELSE = r'else'
+t_KEY_USE = r'use'
 
 t_ignore_COMMENT = r'//.*'
 
