@@ -39,6 +39,7 @@ class QBlock:
 
         return asmcode
 
+
 class QFunction:
     definition: qiwiast.ASTFuncDef
     var_read_write: List[(str,str)]
@@ -48,6 +49,17 @@ class QFunction:
         self.var_read_write = function.count_var_use()
         print(f"var_read_write:[{self.definition.name.name}]")
         print(self.var_read_write)
+
+    def var_can_kill(self,var:str):
+        for entry in self.var_read_write:
+            if(entry == ('W',var)):
+                return True 
+            elif(entry == ('R',var)):
+                return False
+        return True 
+
+    def var_list_remove(self,element:(str,str)):
+        self.var_read_write.remove(element)
 
     def generate(self, context: Context, args: list[list[int]]) -> QBlock:
         outerscope = context.scope
@@ -66,7 +78,7 @@ class QFunction:
 
         block = QBlock()
         for statement in self.definition.body[:-1]:
-            block.append(statement.generate(context))
+            block.append(statement.generate(context,self))
         last_exp_block = self.definition.body[-1].generate(context)
         block.append(last_exp_block)
         block.output = last_exp_block.output

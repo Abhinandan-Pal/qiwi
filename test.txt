@@ -2,7 +2,11 @@ use abc as i;
 use def as j;
 fn main() {
     a: q4 = 3;
+    d: q4 = a;
     b: q5 = 5;
     c: q3 = 6;
-    j.sub(i.add(a, b), c)
+    e: q4 = 8;     //this should not be initialized as never used
+    d: q7 = (((a + b) - c) + d);
+    l = i.add(a, b);
+    j.sub(l, c)
 }

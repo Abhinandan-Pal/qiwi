@@ -186,7 +186,7 @@ class ASTExpBinary(ASTExp):
         return block
 
 class ASTStatement(ASTNode):
-    def generate(self, _: qiwicg.Context) -> qiwicg.QBlock:
+    def generate(self, _: qiwicg.Context, a: qiwicg.QFunction) -> qiwicg.QBlock:
         raise NotImplementedError
 
     def count_var_use(self):
@@ -276,14 +276,28 @@ class ASTAssignment(ASTStatement):
         result = []
         if(self.rhs.count_var_use() != None):
             for var in self.rhs.count_var_use():
-                result += var
+                result += [var]
         result += [("W",self.lhs.name)]
         return result
 
 
-    def generate(self, context: qiwicg.Context) -> qiwicg.QBlock:
+    def generate(self, context: qiwicg.Context, qf : qiwicg.QFunction) -> qiwicg.QBlock:
         block = qiwicg.QBlock()
+        if(self.rhs.count_var_use() != None):
+            for var in self.rhs.count_var_use():
+                
+                s1,s2 = var
+                qf.var_list_remove(var)
+                if(qf.var_can_kill(s2)):
+                    print(f"Kill: {s2}")
+                else:
+                    print(f"Persist: {s2}")
+                print("Now")
+                print(qf.var_read_write)
 
+        qf.var_list_remove(("W",self.lhs.name))
+        if(qf.var_can_kill(self.lhs.name)):
+            print(f"Dont create: {self.lhs.name}")
         rhs = self.rhs.generate(context)
         if isinstance(rhs, int): # constant integer
             binary = bin(rhs)[2:]

@@ -1,3 +1,7 @@
 fn add(lhs: qN, rhs: qN) {
+    ad = 5;
+    bcs = 6;
+
+    ld = (ad + bcs);
     (lhs + rhs)
 }
