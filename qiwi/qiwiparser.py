@@ -19,8 +19,8 @@ def p_imports_blank(p):
     p[0] = []
 
 def p_import_use(p):
-    'import : KEY_USE ID EOS'
-    p[0] = [((p[2]+".txt"),"self")]
+    'import : KEY_USE ID KEY_AS ID EOS'
+    p[0] = [((p[2]+".txt"),p[4])]
 
 def p_fnprogram_blank(p):
     'fnprogram :'
@@ -109,7 +109,7 @@ def p_expression_call(p):
     p[0] = qiwiast.ASTFuncCall(qiwiast.ASTID(p[1]), p[3])
 
 def p_expression_import_call(p):
-    'expression : ID COLON ID LPAREN args RPAREN'
+    'expression : ID DOT ID LPAREN args RPAREN'
     p[0] = qiwiast.ASTFuncCall(qiwiast.ASTID(p[3]), p[5],p[1])
 
 def p_args_null(p):

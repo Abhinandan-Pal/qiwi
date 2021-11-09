@@ -12,7 +12,7 @@ from . import qiwicg
 
 
 use_files = []
-current_name_space = "self"
+
 # Build the lexer
 lexer = lex.lex(module=qiwilexer)
 
@@ -31,15 +31,20 @@ parser = yacc.yacc(module=qiwiparser)
 
 parsed_result = parser.parse(main_source)
 
+context = qiwicg.Context()
+context.current_name_space = "self"
+qiwicg.generate(parsed_result,context)
+
+collector = parsed_result
 for file,name_space in use_files:
-    current_name_space = name_space
+    context.current_name_space = name_space
     use_sorce = open(file).read()
-    parsed_result += parser.parse(use_sorce)
+    parsed_result = parser.parse(use_sorce)
+    qiwicg.generate(parsed_result,context)
+    collector += parsed_result
+print(collector)
 
-print(parsed_result)
 
-
-context = qiwicg.generate( parsed_result)
 mainfunc = context.functions[('main','self')]
 mainargs = list(map(lambda x: list(range(context.used_qbits, context.used_qbits + x[1].length)), mainfunc.definition.args))
 code = context.functions[('main','self')].generate(context, []).generate_qasm(context)

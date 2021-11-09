@@ -9,6 +9,8 @@ class ASTNode:
 class ASTExp(ASTNode):
     def generate(self, _: qiwicg.Context):
         raise NotImplementedError
+    def count_var_use(self):
+        raise NotImplementedError
 
 class ASTTypeQ(ASTNode):
     length: int
@@ -19,19 +21,22 @@ class ASTTypeQ(ASTNode):
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.length})"
 
+    def count_var_use(self):
+        raise NotImplementedError
+
     def generate(self, _: qiwicg.Context) -> qiwicg.QBlock:
         raise NotImplementedError
 
 class ASTID(ASTExp):
     name: str
-    name_space: str
-
-    def __init__(self, name: str,name_space: Optional[str] = "self") -> None:
+    def __init__(self, name: str) -> None:
         self.name = name
-        self.name_space = name_space
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({self.name_space}.{self.name})"
+        return f"{self.__class__.__name__}({self.name})"
+
+    def count_var_use(self):
+        return [('R',self.name)]
 
     def generate(self, context: qiwicg.Context) -> qiwicg.QFunction | qiwicg.QDynamicFunction | qiwicg.QBlock:
         if context.lookup_variable(self.name):
@@ -50,6 +55,9 @@ class ASTIndexedID(ASTExp):
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.name})"
 
+    def count_var_use(self):
+        return [('R',self.name)]
+
     def generate(self, context: qiwicg.Context) -> qiwicg.QBlock:
         block = qiwicg.QBlock()
         block.output = context.lookup_variable(self.name)
@@ -63,6 +71,9 @@ class ASTInt(ASTExp):
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.value})"
+
+    def count_var_use(self):
+        return None
 
     def generate(self, _: qiwicg.Context) -> int:
         return self.value
@@ -99,6 +110,14 @@ class ASTExpBinary(ASTExp):
         block.add(qiwicg.QGate('cx', [args[0], args[1]]))
 
         return block
+
+    def count_var_use(self):
+        result = []
+        if(self.left.count_var_use() != None ):
+            result += self.left.count_var_use()
+        if(self.right.count_var_use() != None): 
+            result += self.right.count_var_use()
+        return result
 
     def generate(self, context: qiwicg.Context) -> qiwicg.QBlock:
         block = qiwicg.QBlock()
@@ -170,6 +189,9 @@ class ASTStatement(ASTNode):
     def generate(self, _: qiwicg.Context) -> qiwicg.QBlock:
         raise NotImplementedError
 
+    def count_var_use(self):
+        raise NotImplementedError
+
 class ASTFuncDef(ASTNode):
     name: ASTID
     body: list[ASTStatement]
@@ -184,6 +206,13 @@ class ASTFuncDef(ASTNode):
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.name}, {self.return_type}, {self.args}, {self.body})"
+
+    def count_var_use(self):
+        result: list[(str,str)]
+        result = []
+        for sta in self.body:
+            result += sta.count_var_use()
+        return result
 
     def generate(self, context: qiwicg.Context):
         context.add_function(self.name.name, qiwicg.QFunction(self))
@@ -200,6 +229,13 @@ class ASTFuncCall(ASTExp):
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.name_space}.{self.name}, {self.args})"
+
+    def count_var_use(self):
+        result : [(str,str)]
+        result = []
+        for arg in self.args:
+            result+= arg.count_var_use()
+        return result
 
     def generate(self, context: qiwicg.Context) -> qiwicg.QBlock:
         block = qiwicg.QBlock()
@@ -234,6 +270,16 @@ class ASTAssignment(ASTStatement):
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.lhs}, {self.rhs})"
+
+    def count_var_use(self):
+        result: list[(str,str)]
+        result = []
+        if(self.rhs.count_var_use() != None):
+            for var in self.rhs.count_var_use():
+                result += var
+        result += [("W",self.lhs.name)]
+        return result
+
 
     def generate(self, context: qiwicg.Context) -> qiwicg.QBlock:
         block = qiwicg.QBlock()

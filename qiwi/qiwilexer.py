@@ -3,6 +3,7 @@ reserved_keywords = {
    'if'   : 'KEY_IF',
    'else' : 'KEY_ELSE',
    'use' : 'KEY_USE',
+   'as'  : 'KEY_AS'
 }
 
 # token names
@@ -22,6 +23,7 @@ tokens = list(reserved_keywords.values()) + [
     'COMMA',
     'COLON',
     'EOS',
+    'DOT',
 
     'CST_INT',
     'ID',
@@ -44,11 +46,13 @@ t_ASSIGN = r'='
 t_COMMA  = r','
 t_COLON  = r':'
 t_EOS    = r';'
+t_DOT    = r'\.'
 
 t_KEY_FN   = r'fn'
 t_KEY_IF   = r'if'
 t_KEY_ELSE = r'else'
 t_KEY_USE = r'use'
+t_KEY_AS = r'as'
 
 t_ignore_COMMENT = r'//.*'
 

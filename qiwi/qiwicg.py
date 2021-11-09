@@ -41,9 +41,13 @@ class QBlock:
 
 class QFunction:
     definition: qiwiast.ASTFuncDef
+    var_read_write: List[(str,str)]
 
     def __init__(self, function: qiwiast.ASTFuncDef) -> None:
         self.definition = function
+        self.var_read_write = function.count_var_use()
+        print(f"var_read_write:[{self.definition.name.name}]")
+        print(self.var_read_write)
 
     def generate(self, context: Context, args: list[list[int]]) -> QBlock:
         outerscope = context.scope
@@ -92,10 +96,12 @@ builtin_functions = {
     'x': QDynamicFunction(builtin_x),
 }
 
+
 class Context:
     functions: dict[(str,str), QFunction]      # name,name_space to function
     used_qbits: int
     scope: dict[str, list[int]]
+    current_name_space: str
 
     def __init__(self) -> None:
         self.functions = {}
@@ -108,7 +114,7 @@ class Context:
         return bits
 
     def add_function(self, name: str, function: QFunction):
-        self.functions[(name, __main__.current_name_space)] = function
+        self.functions[(name, self.current_name_space)] = function
 
     def lookup_function(self, name: str , name_space: Optional[str] = "self" ) -> QFunction | QDynamicFunction:
         if builtin_functions.get(name):
@@ -128,12 +134,9 @@ class Context:
 
         raise RuntimeError(f"Cannot find variable named: {name}")
 
-def generate(ast: list[qiwiast.ASTNode]) -> Context:
-    context = Context()
+def generate(ast: list[qiwiast.ASTNode], context: Context):
     for node in ast:
         if isinstance(node, qiwiast.ASTFuncDef):
             cast(qiwiast.ASTFuncDef, node).generate(context)
         else:
             raise RuntimeError(f"Unknown top level declaration: {node}")
-
-    return context

@@ -1,8 +1,8 @@
-use abc;
-use def;
+use abc as i;
+use def as j;
 fn main() {
     a: q4 = 3;
     b: q5 = 5;
     c: q3 = 6;
-    sub(add(a, b), c)
+    j.sub(i.add(a, b), c)
 }
