@@ -3,7 +3,7 @@ use def as j;
 fn main() {
     a: q4 = 6;
     d: q4 = a;
-    b: q5 = h(d);
+    b: q5 = H(d);
     c: q3 = 3 + 3;
     e: q4 = h(4);     //this should not be initialized as never used
     d: q7 = (((a + b) - c) + d);

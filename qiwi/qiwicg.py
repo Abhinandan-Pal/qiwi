@@ -108,7 +108,8 @@ def builtin_h(args: list[list[int]]) -> QBlock:
     block = QBlock()
 
     if len(args) != 1:
-        raise RuntimeError(f"x expects 1 arguments, {len(args)} provided")
+        raise RuntimeError(f"h expects 1 arguments, {len(args)} provided")
+
     for bit in args[0]:
         block.add(QGate('h', [bit]))
 
@@ -116,10 +117,53 @@ def builtin_h(args: list[list[int]]) -> QBlock:
     
     return block
 
+def builtin_cx(args: list[list[int]]) -> QBlock:
+    block = QBlock()
+
+    if len(args) != 2:
+        raise RuntimeError(f"CNOT expects 2 arguments, {len(args)} provided")
+    if(len(args[0]) != len(args[1])):
+        raise RuntimeError(f"CNOT expects 2 arguments of same size, {len(args[0])} and {len(args[1])} provided")
+    for pos in len(args[0]):
+        block.add(QGate('h', [args[0][pos],args[1][pos]]))
+
+    block.output = args[1]      # IS THIS CORRECT?
+    
+    return block
+
+def builtin_cx(args: list[list[int]]) -> QBlock:
+    block = QBlock()
+
+    if len(args) != 2:
+        raise RuntimeError(f"CNOT expects 2 arguments, {len(args)} provided")
+    if(len(args[0]) != len(args[1])):
+        raise RuntimeError(f"CNOT expects 2 arguments of same size, {len(args[0])} and {len(args[1])} provided")
+    for pos in len(args[0]):
+        block.add(QGate('h', [args[0][pos],args[1][pos]]))
+
+    block.output = args[1]      # IS THIS CORRECT?
+    
+    return block
+
+def builtin_ccx(args: list[list[int]]) -> QBlock:
+    block = QBlock()
+
+    if len(args) != 3:
+        raise RuntimeError(f"CNOT expects  arguments, {len(args)} provided")
+    if(len(args[0]) != len(args[1])) & (len(args[0]) != len(args[2])):
+        raise RuntimeError(f"CNOT expects 3 arguments of same size, {len(args[0])} , {len(args[1])} , {len(args[2])} qubit provided")
+    for pos in len(args[0]):
+        block.add(QGate('h', [args[0][pos],args[1][pos]]))
+
+    block.output = args[1]      # IS THIS CORRECT?
+    
+    return block
 
 builtin_functions = {
-    'x': QDynamicFunction(builtin_x),
-    'h': QDynamicFunction(builtin_h)
+    'X': QDynamicFunction(builtin_x),
+    'H': QDynamicFunction(builtin_h),
+    'CX': QDynamicFunction(builtin_h),
+    'CXX': QDynamicFunction(builtin_h),
 }
 
 

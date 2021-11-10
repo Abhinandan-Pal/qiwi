@@ -343,7 +343,7 @@ class ASTAssignment(ASTStatement):
             if isinstance(self.type, ASTTypeQ):
                 size = self.type.length
                 if len(location) > size:
-                    raise RuntimeError(f"Type {self.type} not large enough to store {len(location)} bits")
+                    raise RuntimeError(f"Type {self.type} not large enough to store {len(location)} bitsI")
         else:
             raise RuntimeError("Unimplemented!")
 
