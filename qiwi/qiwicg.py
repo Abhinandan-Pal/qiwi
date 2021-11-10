@@ -104,8 +104,22 @@ def builtin_x(args: list[list[int]]) -> QBlock:
     
     return block
 
+def builtin_h(args: list[list[int]]) -> QBlock:
+    block = QBlock()
+
+    if len(args) != 1:
+        raise RuntimeError(f"x expects 1 arguments, {len(args)} provided")
+    for bit in args[0]:
+        block.add(QGate('h', [bit]))
+
+    block.output = args[0]
+    
+    return block
+
+
 builtin_functions = {
     'x': QDynamicFunction(builtin_x),
+    'h': QDynamicFunction(builtin_h)
 }
 
 

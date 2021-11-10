@@ -75,8 +75,19 @@ class ASTInt(ASTExp):
     def count_var_use(self):
         return None
 
-    def generate(self, _: qiwicg.Context) -> int:
-        return self.value
+    def generate(self, context: qiwicg.Context) -> int:
+        binary = bin(self.value)[2:]
+        size = len(binary)
+        block = qiwicg.QBlock()
+        location = list(range(context.used_qbits, context.used_qbits + size))
+        context.used_qbits += size
+            
+            # set 1 bits
+        for i in range(0, size):
+            if (self.value >> i) & 1 == 1:
+                block.add(qiwicg.QGate('x', [location[i]]))
+        block.output = location
+        return block
 
 class ASTExpBinary(ASTExp):
     operator: str
@@ -123,6 +134,7 @@ class ASTExpBinary(ASTExp):
         block = qiwicg.QBlock()
 
         a = self.left.generate(context)
+        #print(f'RESULT : {a}')
         block.append(a)
 
         b = self.right.generate(context)
@@ -234,7 +246,8 @@ class ASTFuncCall(ASTExp):
         result : [(str,str)]
         result = []
         for arg in self.args:
-            result+= arg.count_var_use()
+            if(arg.count_var_use() != None):
+                result+= arg.count_var_use()
         return result
 
     def generate(self, context: qiwicg.Context) -> qiwicg.QBlock:
@@ -243,6 +256,8 @@ class ASTFuncCall(ASTExp):
         argloc = []
         for arg in self.args:
             argblock = arg.generate(context)
+            if(type(argblock) == int):
+                raise RuntimeError("Only variables can be placed in function")
             block.append(argblock)
             argloc.append(argblock.output)
         
@@ -301,7 +316,8 @@ class ASTAssignment(ASTStatement):
             return block
         rhs = self.rhs.generate(context)
         if isinstance(rhs, int): # constant integer
-            binary = bin(rhs)[2:]
+            pass
+            '''binary = bin(rhs)[2:]
 
             # allocate qubits
             if isinstance(self.type, ASTTypeQ):
@@ -317,13 +333,17 @@ class ASTAssignment(ASTStatement):
             # set 1 bits
             for i in range(0, size):
                 if (rhs >> i) & 1 == 1:
-                    block.add(qiwicg.QGate('x', [location[i]]))
+                    block.add(qiwicg.QGate('x', [location[i]]))'''
 
         elif isinstance(rhs, list): # variable location reference
             location = rhs
         elif isinstance(rhs, qiwicg.QBlock):
             location = rhs.output
             block.append(rhs)
+            if isinstance(self.type, ASTTypeQ):
+                size = self.type.length
+                if len(location) > size:
+                    raise RuntimeError(f"Type {self.type} not large enough to store {len(location)} bits")
         else:
             raise RuntimeError("Unimplemented!")
 
