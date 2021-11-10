@@ -11,7 +11,8 @@ from . import qiwiast
 from . import qiwicg
 
 
-use_files = []
+use_files = set()
+used_files = set()
 
 # Build the lexer
 lexer = qiwi_lex.QiwiLexer()
@@ -26,18 +27,25 @@ for tok in lexer.tokenize(main_source):
 print("LEX SUCCESS")
 
 parsed_result = parser.parse(lexer.tokenize(main_source))
+used_files.add(sys.argv[1])
 
 context = qiwicg.Context()
 context.current_name_space = "self"
 qiwicg.generate(parsed_result,context)
 
 collector = parsed_result
-for file,name_space in use_files:
-    context.current_name_space = name_space
-    use_sorce = open(file).read()
-    parsed_result = parser.parse(lexer.tokenize(use_sorce))
-    qiwicg.generate(parsed_result,context)
-    collector += parsed_result
+print(f"USE FILE : {use_files}")
+while (len(use_files)!=0):
+    print(f"USE FILE : {use_files}")
+    file,name_space = use_files.pop()
+    if file not in used_files:
+        context.current_name_space = name_space
+        use_source = open(file).read()
+        parsed_result = parser.parse(lexer.tokenize(use_source))
+        qiwicg.generate(parsed_result,context)
+        collector += parsed_result
+        used_files.add(file)
+
 print(collector)
 
 

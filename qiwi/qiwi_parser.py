@@ -18,7 +18,8 @@ class QiwiParser(Parser):
 		pass
 	@_('imports fnprogram')
 	def program(self, p):
-		__main__.use_files = p.imports
+		__main__.use_files = __main__.use_files.union(set(p.imports))
+		print(f"USE FILE Parser: {__main__.use_files.union(set(p.imports))}")
 		return p.fnprogram
 #------
 	@_('impt imports')

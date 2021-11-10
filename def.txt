@@ -1,3 +1,4 @@
+use abc as i;
 fn sub(lhs: qN, rhs: qN) {
     (lhs - rhs)
 }
