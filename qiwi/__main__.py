@@ -5,8 +5,8 @@ import sys
 import ply.lex as lex
 import ply.yacc as yacc
 
-from . import qiwilexer
-from . import qiwiparser
+from . import qiwi_lex
+from . import qiwi_parser
 from . import qiwiast
 from . import qiwicg
 
@@ -14,22 +14,18 @@ from . import qiwicg
 use_files = []
 
 # Build the lexer
-lexer = lex.lex(module=qiwilexer)
+lexer = qiwi_lex.QiwiLexer()
+parser = qiwi_parser.QiwiParser()
 
 # test
 main_source = open(sys.argv[1]).read()
-lexer.input(main_source)
 
-while True:
-    tok = lexer.token()
-    if not tok: # EOF
-        break
+for tok in lexer.tokenize(main_source):
     #print(tok)
+    pass
+print("LEX SUCCESS")
 
-
-parser = yacc.yacc(module=qiwiparser)
-
-parsed_result = parser.parse(main_source)
+parsed_result = parser.parse(lexer.tokenize(main_source))
 
 context = qiwicg.Context()
 context.current_name_space = "self"
@@ -39,7 +35,7 @@ collector = parsed_result
 for file,name_space in use_files:
     context.current_name_space = name_space
     use_sorce = open(file).read()
-    parsed_result = parser.parse(use_sorce)
+    parsed_result = parser.parse(lexer.tokenize(use_sorce))
     qiwicg.generate(parsed_result,context)
     collector += parsed_result
 print(collector)

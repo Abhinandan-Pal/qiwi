@@ -298,6 +298,7 @@ class ASTAssignment(ASTStatement):
         qf.var_list_remove(("W",self.lhs.name))
         if(qf.var_can_kill(self.lhs.name)):
             print(f"Dont create: {self.lhs.name}")
+            return block
         rhs = self.rhs.generate(context)
         if isinstance(rhs, int): # constant integer
             binary = bin(rhs)[2:]
