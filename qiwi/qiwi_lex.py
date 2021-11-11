@@ -4,10 +4,11 @@ from sly import Lexer
 
 class QiwiLexer(Lexer):
     tokens = { NUM, ID, WHILE, IF, ELSE, PRINT, FN,
-               EQ, LT, LE, GT, GE, NE, USE, AS }
+               EQ, LT, LE, GT, GE, NE, USE, AS, 
+               IF_QC, AND, OR, NAND, NOR, XOR, XNOR }
 
 
-    literals = { '(', ')', '{', '}', ';' , '-' , '+' , '*' , '/' , '=' , ',' , '.', ':'}
+    literals = { '(', ')', '{', '}', '[',']' ,';' , '-' , '+' , '*' , '/' , '=' , ',' , '.', ':'}
 
     # String containing ignored characters
     ignore = ' \t'
@@ -19,6 +20,7 @@ class QiwiLexer(Lexer):
     GE      = r'>='
     GT      = r'>'
     NE      = r'!='
+
 
     @_(r'\d+')
     def NUM(self, t):
@@ -34,6 +36,14 @@ class QiwiLexer(Lexer):
     ID['fn']    = FN
     ID['use']  = USE
     ID['as']  = AS
+    ID['if_qc']  = IF_QC
+    ID['or'] = OR
+    ID['and'] = AND
+    ID['nand'] = NAND
+    ID['nor'] = NOR 
+    ID['xor'] = XOR
+    ID['xnor'] = XNOR
+
 
     ignore_comment = r'//.*'
 

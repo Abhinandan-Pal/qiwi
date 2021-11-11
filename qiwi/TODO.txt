@@ -1,3 +1,0 @@
-- Extend a quantumn bariable by one extra bit 101 becomes 0101
-- Create qutatum variable of size guven by classical   int a = 5    qN: b = 10
-- CX gate on variables allow different size inputs

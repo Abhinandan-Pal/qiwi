@@ -1,12 +1,11 @@
-use abc as i;
-use def as j;
 fn main() {
-    a: q4 = 6;
-    d: q4 = a;
-    b: q5 = H(d);
-    c: q3 = 3 + 3;
-    e: q4 = h(4);     //this should not be initialized as never used
-    d: q7 = (((a + b) - c) + d);
-    l = i.add(a, b);
-    j.sub(l, c)
+    a: q3 = 0;
+    if_qc(a[0]) {H(a[2])};
+    if_qc(a[0] and a[1]){X(a[2])};
+    if_qc (a[0] or a[1]){X(a[2])};
+    if_qc(a[2] nand a[1]){X(a[0])};
+    if_qc(a[2] nor a[1]){X(a[0])};
+    if_qc(a[2] xor a[1]){X(a[0])};
+    if_qc(a[2] xnor a[1]){X(a[0])};
+    a
 }

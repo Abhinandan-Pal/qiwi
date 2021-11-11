@@ -26,7 +26,7 @@ class QBlock:
         self.gates += block.gates
 
     def generate_qasm(self, context: Context) -> str:
-        asmcode = f"OPENQASM 2.0;\ninclude \"qelib1.inc\";\n\nqreg q[{context.used_qbits}];\n\n"
+        asmcode = f"\n\n\nOPENQASM 2.0;\ninclude \"qelib1.inc\";\n\nqreg q[{context.used_qbits}];\n\n"
         for gate in self.gates:
             line = f"{gate.name}"
             
@@ -131,19 +131,6 @@ def builtin_cx(args: list[list[int]]) -> QBlock:
     
     return block
 
-def builtin_cx(args: list[list[int]]) -> QBlock:
-    block = QBlock()
-
-    if len(args) != 2:
-        raise RuntimeError(f"CNOT expects 2 arguments, {len(args)} provided")
-    if(len(args[0]) != len(args[1])):
-        raise RuntimeError(f"CNOT expects 2 arguments of same size, {len(args[0])} and {len(args[1])} provided")
-    for pos in len(args[0]):
-        block.add(QGate('h', [args[0][pos],args[1][pos]]))
-
-    block.output = args[1]      # IS THIS CORRECT?
-    
-    return block
 
 def builtin_ccx(args: list[list[int]]) -> QBlock:
     block = QBlock()
@@ -155,7 +142,7 @@ def builtin_ccx(args: list[list[int]]) -> QBlock:
     for pos in len(args[0]):
         block.add(QGate('h', [args[0][pos],args[1][pos]]))
 
-    block.output = args[1]      # IS THIS CORRECT?
+    block.output = args[2]      # IS THIS CORRECT?
     
     return block
 
@@ -197,6 +184,9 @@ class Context:
 
     def set_variable(self, name: str, location: list[int]) -> None:
         self.scope[name] = location
+
+    def delete_variable(self, name: str) -> None:
+        del self.scope[name]
 
     def lookup_variable(self, name: str) -> list[int]:
         if self.scope.get(name):

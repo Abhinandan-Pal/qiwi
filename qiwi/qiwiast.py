@@ -47,20 +47,21 @@ class ASTID(ASTExp):
 
 class ASTIndexedID(ASTExp):
     name: str
+    index: int
 
     def __init__(self, name: str, index: int) -> None:
         self.name = name
         self.index = index
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({self.name})"
+        return f"{self.__class__.__name__}({self.name}_[{self.index}])"
 
     def count_var_use(self):
         return [('R',self.name)]
 
     def generate(self, context: qiwicg.Context) -> qiwicg.QBlock:
         block = qiwicg.QBlock()
-        block.output = context.lookup_variable(self.name)
+        block.output = [context.lookup_variable(self.name)[self.index]]
         return block
 
 class ASTInt(ASTExp):
@@ -81,12 +82,108 @@ class ASTInt(ASTExp):
         block = qiwicg.QBlock()
         location = list(range(context.used_qbits, context.used_qbits + size))
         context.used_qbits += size
-            
             # set 1 bits
         for i in range(0, size):
             if (self.value >> i) & 1 == 1:
                 block.add(qiwicg.QGate('x', [location[i]]))
         block.output = location
+        return block
+
+class ASTIf_qc(ASTExp):
+    left_cond: Type[ASTIndexedID]
+    right_cond: Type[ASTIndexedID]
+    op_cond: str
+    target_func: Type[ASTFuncCall]
+
+    def __init__(self, control_tuple, target_func):
+        self.left_cond,self.op_cond,self.right_cond = control_tuple
+        self.target_func = target_func
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self.left_cond},{self.op_cond},{self.right_cond},{self.target_func})"
+
+    def count_var_use(self):
+        val = []
+        if(self.left_cond.count_var_use() != None):
+            val += self.left_cond.count_var_use()
+        if(self.right_cond != None):    
+            if(self.right_cond.count_var_use() != None):
+                val += self.right_cond.count_var_use()
+        if(self.target_func.count_var_use() != None):
+            val += self.target_func.count_var_use()
+        return val
+    def generate(self, context: qiwicg.Context, qf : qiwicg.QFunction) -> qiwicg.QBlock:
+        block = qiwicg.QBlock()
+        #if(self.target_func != Type[ASTFuncCall]):                 #FIX THIS ERROR ALERT
+           # raise RuntimeError("Target of if_qc must be a Gate on a qubit")
+        t_func_name = self.target_func.name
+        t_func_args = self.target_func.args
+
+        # Add cool syntax error detection stuff
+        func = context.lookup_function(t_func_name.name, self.target_func.name_space)
+        left_cond_block = self.left_cond.generate(context)
+        if(self.right_cond != None):
+            right_cond_block = self.right_cond.generate(context)
+            block.append(right_cond_block)
+        block.append(left_cond_block)
+        
+
+        argloc = []
+        for arg in t_func_args:
+            argblock = arg.generate(context)
+            if(type(argblock) == int):
+                raise RuntimeError("Only variables can be placed in function")
+            block.append(argblock)
+            argloc.append(argblock.output)
+        t_func_name = t_func_name.name.lower()
+
+        if len(argloc) != 1:
+            raise RuntimeError(f"Target expects 1 arguments, {len(argloc)} provided")
+        
+        if len(argloc[0]) != 1 :
+            raise RuntimeError(f"Target argument expected to be 1 qubit, {len(argloc[0])} provided")
+        
+        if(self.op_cond == 'SINGLE'):
+            cgate = 'c'+t_func_name   
+            block.add(qiwicg.QGate(cgate, [left_cond_block.output[0],argloc[0][0]]))
+
+        if(self.op_cond == 'xor'):
+            cgate = 'c'+t_func_name   
+            block.add(qiwicg.QGate(cgate, [left_cond_block.output[0],argloc[0][0]]))
+            block.add(qiwicg.QGate(cgate, [right_cond_block.output[0],argloc[0][0]]))
+
+        if(self.op_cond == 'xnor'):
+            cgate = 'c'+t_func_name   
+            block.add(qiwicg.QGate(cgate, [left_cond_block.output[0],argloc[0][0]]))
+            block.add(qiwicg.QGate(cgate, [right_cond_block.output[0],argloc[0][0]]))
+            block.add(qiwicg.QGate('x',[argloc[0][0]]))
+
+        if(self.op_cond == 'and'):
+            cgate = 'cc'+t_func_name   
+            block.add(qiwicg.QGate(cgate, [left_cond_block.output[0],right_cond_block.output[0],argloc[0][0]]))
+        
+        if(self.op_cond == 'or'):
+            cgate = 'cc'+t_func_name  
+            block.add(qiwicg.QGate('x',[left_cond_block.output[0]])) 
+            block.add(qiwicg.QGate('x',[right_cond_block.output[0]]))  
+            block.add(qiwicg.QGate(cgate, [left_cond_block.output[0],right_cond_block.output[0],argloc[0][0]]))
+            block.add(qiwicg.QGate('x',[left_cond_block.output[0]])) 
+            block.add(qiwicg.QGate('x',[right_cond_block.output[0]]))
+            block.add(qiwicg.QGate('x',[argloc[0][0]]))
+        
+        if(self.op_cond == 'nor'):
+            cgate = 'cc'+t_func_name 
+            block.add(qiwicg.QGate('x',[left_cond_block.output[0]])) 
+            block.add(qiwicg.QGate('x',[right_cond_block.output[0]])) 
+            block.add(qiwicg.QGate(cgate, [left_cond_block.output[0],right_cond_block.output[0],argloc[0][0]]))
+            block.add(qiwicg.QGate('x',[left_cond_block.output[0]])) 
+            block.add(qiwicg.QGate('x',[right_cond_block.output[0]])) 
+
+        if(self.op_cond == 'nand'):
+            cgate = 'cc'+t_func_name   
+            block.add(qiwicg.QGate(cgate, [left_cond_block.output[0],right_cond_block.output[0],argloc[0][0]]))
+            block.add(qiwicg.QGate('x',[argloc[0][0]]))
+            block.output = argloc[0]
         return block
 
 class ASTExpBinary(ASTExp):
@@ -223,7 +320,8 @@ class ASTFuncDef(ASTNode):
         result: list[(str,str)]
         result = []
         for sta in self.body:
-            result += sta.count_var_use()
+            if(sta.count_var_use() != None):
+                result += sta.count_var_use()
         return result
 
     def generate(self, context: qiwicg.Context):
@@ -301,12 +399,18 @@ class ASTAssignment(ASTStatement):
         if(self.rhs.count_var_use() != None):
             for var in self.rhs.count_var_use():
                 
-                s1,s2 = var
+                r_w,var_name = var
                 qf.var_list_remove(var)
-                if(qf.var_can_kill(s2)):
-                    print(f"Kill: {s2}")
+                if(qf.var_can_kill(var_name)):
+                    print(f"Kill: {var_name}")
                 else:
-                    print(f"Persist: {s2}")
+                    var_loc = context.lookup_variable(var_name)
+                    var_copy_loc = context.allocate_qbits(len(var_loc))
+                    for i in range(len(var_loc)):
+                        block.add(qiwicg.QGate('cx', [var_loc[i], var_copy_loc[i]]))
+                    context.set_variable((var_name+":temp"), var_copy_loc)
+                    print(f"Persist: {var_name}")
+
                 print("Now")
                 print(qf.var_read_write)
 
@@ -314,6 +418,7 @@ class ASTAssignment(ASTStatement):
         if(qf.var_can_kill(self.lhs.name)):
             print(f"Dont create: {self.lhs.name}")
             return block
+
         rhs = self.rhs.generate(context)
         if isinstance(rhs, int): # constant integer
             pass
@@ -341,11 +446,25 @@ class ASTAssignment(ASTStatement):
             location = rhs.output
             block.append(rhs)
             if isinstance(self.type, ASTTypeQ):
-                size = self.type.length
-                if len(location) > size:
-                    raise RuntimeError(f"Type {self.type} not large enough to store {len(location)} bitsI")
+                diff = self.type.length - len(location)
+                if diff < 0:
+                    raise RuntimeError(f"Type {self.type} not large enough to store {len(location)} qubits")
+                else:
+                    location += context.allocate_qbits(diff)
+
         else:
             raise RuntimeError("Unimplemented!")
 
+
         context.set_variable(self.lhs.name, location)
+        temp_var = []
+        for key in context.scope:
+            if(key.endswith(":temp")):
+                temp_var.append(key)
+
+        for key in temp_var:
+            loc = context.scope.pop(key)
+            key = key[:key.index(":temp")]
+            context.set_variable(key, loc)
+
         return block

@@ -12,14 +12,13 @@ class QiwiParser(Parser):
        ('left', '+', '-'),
        ('left', '*', '/'),
     )
-
+#------
 	@_('')
 	def empty(self, p):
 		pass
 	@_('imports fnprogram')
 	def program(self, p):
 		__main__.use_files = __main__.use_files.union(set(p.imports))
-		print(f"USE FILE Parser: {__main__.use_files.union(set(p.imports))}")
 		return p.fnprogram
 #------
 	@_('impt imports')
@@ -85,6 +84,9 @@ class QiwiParser(Parser):
 	@_('assignment')
 	def statement(self, p):
 		return p.assignment
+	@_('if_qc_state')
+	def statement(self, p):
+		return p.if_qc_state
 #------
 	@_('ID "=" expr')
 	def assignment(self, p):
@@ -144,6 +146,24 @@ class QiwiParser(Parser):
 	@_('expr')
 	def arg(self, p):
 		return p.expr
+#-----
+	@_('IF_QC "(" if_qc_expr ")" "{" expr "}"')
+	def if_qc_state(self,p):
+		return qiwiast.ASTIf_qc(p.if_qc_expr, p.expr)
+
+	@_('expr')
+	def if_qc_expr(self,p):
+		return (p.expr,'SINGLE',None)
+
+	@_('expr op_qc expr')
+	def if_qc_expr(self,p):
+		return (p[0],p[1],p[2])
+
+	@_('OR','AND','NOR',
+   'NAND','XOR','XNOR')
+	def op_qc(self, p):
+		return p[0]
+
 #-----
 	#@_('QINT "[" NUM "]"')
 	#def type(self, p):
