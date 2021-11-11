@@ -432,6 +432,8 @@ class ASTAssignment(ASTStatement):
                 r_w,var_name = var
                 if(qf.var_can_kill(var_name)):
                     print(f"Kill: {var_name}")
+                elif(var_name == self.lhs.name):
+                    print(f"Update: {var_name}")
                 else:
                     var_loc = context.lookup_variable(var_name)
                     var_copy_loc = context.allocate_qbits(len(var_loc))
