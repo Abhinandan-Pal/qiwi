@@ -21,4 +21,4 @@
     a
 	}
 
-- ADD a shor hand "H(a[0])" to mean a[0] = H(a[0])	
+- ADD a shor hand "H(a[0])" to mean "a[0] = H(b)"
