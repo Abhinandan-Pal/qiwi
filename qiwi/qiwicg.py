@@ -191,7 +191,11 @@ class Context:
         mod[loc_pos] = loc_num
         self.scope[name] = mod
         print(f"SCOPEcq: {self.scope} loc_num = {loc_num} loc_pos = {loc_pos}")
-
+    
+    def free_variable(self,name):
+        pass
+    def free_location(self,name):
+        pass
     def delete_variable(self, name: str) -> None:
         del self.scope[name]
 

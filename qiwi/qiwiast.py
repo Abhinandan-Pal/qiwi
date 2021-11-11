@@ -186,6 +186,153 @@ class ASTIf_qc(ASTExp):
             block.output = argloc[0]
         return block
 
+def kill_persist_fnc(context: qiwicg.Context, qf : qiwicg.QFunction,lhs,index,rhs1,rhs2: Optional[Type[ASTExp]] = None):
+        
+    print(f"BEFORE: {context.scope}->{qf.var_read_write}")
+    flag = False
+    if(rhs1.count_var_use() != None):
+        for var in rhs1.count_var_use():
+            qf.var_list_remove(var)
+    
+    if(rhs2 != None):
+        if(rhs2.count_var_use() != None):
+            for var in rhs2.count_var_use():
+                qf.var_list_remove(var)      
+
+    if(index == None):
+        qf.var_list_remove(("W",lhs.name))
+    else:
+        qf.var_list_remove(("PW",str(index)+lhs.name))    #a particular index of name is rewritten
+    
+    if(qf.var_can_kill(lhs.name)):
+        if(index == None):
+            print(f"Dont create: {lhs.name}")
+        else:
+            print(f"Don't create: {lhs.name}'s {index} qubit")
+        return block
+    else:
+        if(index == None):
+            print(f"Create: {lhs.name}")
+        else:
+            print(f"Create: {lhs.name}'s {index} qubit")
+    for rhs in [rhs1,rhs2]:
+    if(rhs == None):
+        continue
+    if(rhs.count_var_use() != None):
+        for var in rhs.count_var_use():   
+            r_w,var_name = var
+            if(qf.var_can_kill(var_name)):
+                print(f"Kill: {var_name}")
+            elif(var_name == lhs.name):
+                print(f"Update: {var_name}")
+            else:
+                var_loc = context.lookup_variable(var_name)
+                var_copy_loc = context.allocate_qbits(len(var_loc))
+                for i in range(len(var_loc)):
+                    block.add(qiwicg.QGate('cx', [var_loc[i], var_copy_loc[i]]))
+                context.set_variable((var_name+":temp"), var_copy_loc)
+                print(f"Persist: {var_name}")
+    print(f"MIDDLE: {context.scope}->{qf.var_read_write}")
+
+class ASTIf_qm(ASTExp):
+    cond: Type[ASTExp]
+    lhs: Type[ASTExp]
+    lhs_index: int
+    if_exp: Type[ASTExp]
+    else_exp: Type[ASTExp]
+
+    def __init__(self, cond, lhs,if_exp,else_exp: Optional[Type[ASTExp]] = None):
+        self.cond = cond
+        self.lhs = lhs
+        self.if_exp = if_exp
+        self.else_exp = else_exp
+        if(Type(self.lhs) == ASTIndexedID):
+            lhs_index = self.lhs.index 
+        elif(Type(self.lhs) == ASTID):
+            lhs_index = None
+        else:
+            raise RuntimeError("RHS of IF_QM can only be an ID or bitaccess on an ID ")
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self.cond},{self.lhs},{self.if_exp},{self.else_exp})"
+
+    def count_var_use(self):
+        val = []
+        if(self.if_exp.count_var_use() != None):
+            val += self.if_exp.count_var_use()
+        if(self.else_exp != None):    
+            if(self.else_exp.count_var_use() != None):
+                val += self.else_exp.count_var_use()
+        if(lhs_index == None):
+            val += [("W",self.lhs.name)]
+        else:
+            val += [("PW",str(self.lhs.index)+self.lhs.name)]    #a particular index of name is rewritten
+        return val
+    
+    def generate(self, context: qiwicg.Context, qf : qiwicg.QFunction) -> qiwicg.QBlock:
+        block = qiwicg.QBlock()
+
+        kill_persist_fnc(context,qf,lhs,lhs_index,if_exp,else_exp)
+
+        if_exp = self.if_exp.generate(context)
+        if_loc = if_exp.output
+        block.append(if_exp)
+
+        lhs = self.lhs.generate(context)
+        block.append(if_exp)
+        else_loc = lhs.output
+        
+        if(else_exp != None):
+            else_exp = self.else_exp.generate(context)
+            else_loc = else_exp.output
+            block.append(else_exp) 
+        
+        cond = self.cond.generate(context)
+        block.append(cond)
+        cond_loc = cond.output
+
+        if(len(cond_loc)!= 1):
+            raise RuntimeError(f"If condition must be 1 qubit")
+
+        if(self.lhs_index != None):
+            if(len(if_loc)!= 1) or (len(else_loc)!= 1) :
+                raise RuntimeError(f"1 qubit expected for indexed if assignment.{len(if_loc)} or {len(else_loc)} qubits provided")
+        
+        result_loc = context.allocate_qbits(max(if_loc,else_loc))  
+        
+        for i in range(len(if_loc)):
+            block.add(qiwicg.QGate('ccx', [if_loc[i], cond_loc[0], result_loc[i]]))
+            block.add(qiwicg.QGate('reset', [if_loc[i]]))
+        block.add(qiwicg.QGate('x', cond_loc[0]))
+        for i in range(len(else_loc)):
+            block.add(qiwicg.QGate('ccx', [else_loc[i], cond_loc[0], result_loc[i]]))
+            block.add(qiwicg.QGate('reset', [if_loc[i]]))
+
+        context.free_location(if_loc);
+        context.free_location(else_loc);
+        context.free_location(cond_loc);
+
+        if(self.lhs_index != None):
+            context.set_var_index(self.lhs.name, result_loc[0], self.lhs_index)
+        else:
+            context.set_variable(self.lhs.name, result_loc)
+
+        temp_var = []
+        for key in context.scope:
+            if(key.endswith(":temp")):
+                temp_var.append(key)
+
+        for key in temp_var:
+            loc = context.scope.pop(key)
+            key = key[:key.index(":temp")]
+            context.set_variable(key, loc)
+        print(f"END: {context.scope}->{qf.var_read_write}")
+        return block
+
+
+
+
+
 class ASTExpBinary(ASTExp):
     operator: str
     left: Type[ASTExp]

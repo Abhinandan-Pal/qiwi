@@ -12,7 +12,13 @@ fn main() {
     a
 }
 
-
+fn main() {
+    a: q3 = 0;
+    b: q1 = 1;
+    if_qc(b) {H(a[2])};
+    if_qc(a[0] and a[1]){X(b)};
+    a
+}
 
 TEST Persist-kill mechanism
 

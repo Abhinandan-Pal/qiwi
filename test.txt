@@ -1,7 +1,12 @@
 fn main() {
     a: q3 = 0;
-    a[0] = H(a[0]);
-    b: q4 = 1;
-    a = X(a+b);
+    b: q1 = 1;
+    if_qc(b) {H(a[2])};
+    if_qc(a[0] and a[1]){X(b)};
+    if_qc (a[0] or a[1]){X(a[2])};
+    if_qc(a[2] nand a[1]){X(a[0])};
+    if_qc(a[2] nor a[1]){X(a[0])};
+    if_qc(a[2] xor a[1]){X(a[0])};
+    if_qc(a[2] xnor a[1]){X(a[0])};
     a
 }

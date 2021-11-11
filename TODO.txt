@@ -22,3 +22,12 @@
 	}
 
 - ADD a shor hand "H(a[0])" to mean "a[0] = H(b)"
+
+- Mutiplexer
+    a = if_qm(a[0]){a[]}
+
+- prevent errors like cx q[0] q[0]
+
+- Divide AST into several files
+
+- Make function out of common stuff.

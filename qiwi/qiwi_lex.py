@@ -5,7 +5,7 @@ from sly import Lexer
 class QiwiLexer(Lexer):
     tokens = { NUM, ID, WHILE, IF, ELSE, PRINT, FN,
                EQ, LT, LE, GT, GE, NE, USE, AS, 
-               IF_QC, AND, OR, NAND, NOR, XOR, XNOR }
+               IF_QC, IF_QM AND, OR, NAND, NOR, XOR, XNOR }
 
 
     literals = { '(', ')', '{', '}', '[',']' ,';' , '-' , '+' , '*' , '/' , '=' , ',' , '.', ':'}
@@ -37,6 +37,7 @@ class QiwiLexer(Lexer):
     ID['use']  = USE
     ID['as']  = AS
     ID['if_qc']  = IF_QC
+    ID['if_qm']  = IF_QM
     ID['or'] = OR
     ID['and'] = AND
     ID['nand'] = NAND
