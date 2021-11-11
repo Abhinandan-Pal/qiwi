@@ -406,45 +406,34 @@ class ASTAssignment(ASTStatement):
         block = qiwicg.QBlock()
         print("Now")
         print(qf.var_read_write)
-        print(f"SDXFCGVHBJ: {context.scope}")
+        print(f"BEFORE: {context.scope}")
+        
+        def persist_kill_index(var_name,index):
+            ifkill = qf.var_index_can_kill(var_name,index)
+            if(ifkill):
+                print(f"Kill: {var_name}'s {index}th Qubit")
+            else:
+                var_loc = context.lookup_variable(var_name)
+                var_copy_loc = context.allocate_qbits(1)[0]
+                block.add(qiwicg.QGate('cx', [var_loc[index], var_copy_loc]))
+                #context.set_var_index(var_name, var_copy_loc, index)
+                context.set_variable((var_name+":temp"), [var_copy_loc])
+                print(f"Persist: {var_name}'s {index}th Qubit")
+
         if(self.rhs.count_var_use() != None):
+            print(f"LOCAL {self.rhs.count_var_use()}")
             for var in self.rhs.count_var_use():
                 r_w,index,var_name = var
                 if(r_w == "W" or r_w == "PW"):          #somehow it was working even without it
                     continue
                 qf.var_list_remove(var)
                 if(index==None):
-                    ifkill,keepInd = qf.var_can_kill(var_name)
-                    if((ifkill,keepInd) == (True,[])):
-                        print(f"Kill: {var_name}")
-                    elif(ifkill):
-                        print(f"Kill: {var_name}'s {keepInd}th Qubit(s)")
-                    elif((ifkill,keepInd) == (False,[])):
-                        var_loc = context.lookup_variable(var_name)
-                        var_copy_loc = context.allocate_qbits(len(var_loc))
-                        for i in range(len(var_loc)):
-                            block.add(qiwicg.QGate('cx', [var_loc[i], var_copy_loc[i]]))
-                        context.set_variable((var_name+":temp"), var_copy_loc)
-                        print(f"Persist: {var_name}")
-                    else:
-                        var_loc = context.lookup_variable(var_name)
-                        var_copy_loc = context.allocate_qbits(len(keepInd))
-                        for i in range(len(keepInd)):
-                            block.add(qiwicg.QGate('cx', [var_loc[keepInd[i]], var_copy_loc[i]]))
-                        context.set_variable((var_name+":temp"), var_copy_loc)
-                        print(f"Persist: {var_name}'s {keepInd}th Qubit(s)")
-                else:
-                    ifkill = qf.var_index_can_kill(var_name,index)
-                    if(ifkill):
-                        print(f"Kill: {var_name}")
-                    else:
-                        var_loc = context.lookup_variable(var_name)
-                        var_copy_loc = context.allocate_qbits(1)[0]
-                        block.add(qiwicg.QGate('cx', [var_loc[index], var_copy_loc]))
-                        context.set_var_index(var_name, var_copy_loc, index)
-                        context.set_variable((var_name+":temp"), [var_copy_loc])
-                        print(f"Persist: {var_name}'s {index}th Qubit")
+                    for var_bit_num in context.lookup_variable(var_name).keys():
+                        persist_kill_index(var_name,var_bit_num)
 
+                else:
+                    persist_kill_index(var_name,index)
+        print(f"AFTER: {context.scope}")
 
             
         if(self.index == None):
@@ -454,7 +443,7 @@ class ASTAssignment(ASTStatement):
                 return block
             print(f"Create: {self.lhs.name}")
         else:
-            qf.var_list_remove(("PW",self.index,self.lhs.name))    #a particular index of name is rewritten
+            qf.var_list_remove(("PW",self.index,self.lhs.name))    #TODO: only create those bits which are needed. e
             if(qf.var_index_can_kill(self.lhs.name,self.index)):
                 print(f"Dont create: {self.lhs.name}'s {self.index} qubit")
                 return block
@@ -492,7 +481,8 @@ class ASTAssignment(ASTStatement):
         for key in temp_var:
             loc = context.scope.pop(key)
             key = key[:key.index(":temp")]
-            context.set_variable(key, loc)
+            context.update_variable(key, loc)
+        print(f"Very BEFORE: {context.scope}")
 
         return block
 

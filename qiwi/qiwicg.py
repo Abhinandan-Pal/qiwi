@@ -77,10 +77,10 @@ class QFunction:
             elif((note,var) == ('R',in_var)):
                 return False
             elif((note,var) == ('PR',in_var)):
-                if val == in_var:
+                if val == in_val:
                     return False
             elif((note,var) == ('PW',in_var)):
-                if val == in_var:
+                if val == in_val:
                     return True
         return True
 
@@ -211,11 +211,13 @@ class Context:
 
         raise RuntimeError(f"Cannot find function named: {name}")
 
-    def set_variable(self, name: str, location: dict[int,int]) -> None:
+    def set_variable(self, name: str, location: list[int]) -> None:
         location = {i: location[i] for i in range(0, len(location))}
         self.scope[name] = location
-        print(f"dfsdgfsg: {location}")
 
+    def update_variable(self, name: str, location: dict[int,int]) -> None:
+        self.scope[name].update(location) 
+    
     def set_var_index(self, name: str, loc_num: int, loc_pos:int) -> None:
         #print(f"SCOPEcq: {self.scope} loc_num = {loc_num} loc_pos = {loc_pos}")
         mod = self.scope[name]
@@ -227,7 +229,7 @@ class Context:
         del self.scope[name]
 
     def lookup_variable(self, name: str) -> list[int]:
-        print(f"SDXFCGVHBJ: {self.scope}")
+        
         if self.scope.get(name):
             return self.scope[name]
         
