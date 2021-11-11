@@ -401,7 +401,7 @@ class ASTAssignment(ASTStatement):
             result += [("PW",str(self.index)+self.lhs.name)]    #a particular index of name is rewritten
         return result
 
- 
+
     def generate(self, context: qiwicg.Context, qf : qiwicg.QFunction) -> qiwicg.QBlock:
         block = qiwicg.QBlock()
         print(f"BEFORE: {context.scope}->{qf.var_read_write}")
