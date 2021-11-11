@@ -42,7 +42,7 @@ class QBlock:
 
 class QFunction:
     definition: qiwiast.ASTFuncDef
-    var_read_write: List[(str,str)]
+    var_read_write: List[(str,int,str)]
 
     def __init__(self, function: qiwiast.ASTFuncDef) -> None:
         self.definition = function
@@ -50,13 +50,41 @@ class QFunction:
         print(f"var_read_write:[{self.definition.name.name}]")
         print(self.var_read_write)
 
-    def var_can_kill(self,var:str):
+    def var_can_kill(self,in_var:str):
         for entry in self.var_read_write:
-            if(entry == ('W',var)):
+            note,val,var = entry
+            kill_lst = []
+            keep_lst = []
+            if((note,var) == ('W',in_var)):
+                return (True,[]) 
+            elif((note,var) == ('R',in_var)):
+                return (False,[])
+            elif((note,var) == ('PR',in_var)):
+                if val not in kill_lst+keep_lst:
+                    keep_lst+=[val]
+            elif((note,var) == ('PW',in_var)):
+                if val not in kill_lst+keep_lst:
+                    kill_lst+=[val]
+        if(keep_lst == []):
+            return (True,[])
+        return (False,kill_lst) 
+
+    def var_index_can_kill(self,in_var:str,in_val:int):
+        for entry in self.var_read_write:
+            note,val,var = entry
+            if((note,var) == ('W',in_var)):
                 return True 
-            elif(entry == ('R',var)):
+            elif((note,var) == ('R',in_var)):
                 return False
-        return True 
+            elif((note,var) == ('PR',in_var)):
+                if val == in_var:
+                    return False
+            elif((note,var) == ('PW',in_var)):
+                if val == in_var:
+                    return True
+        return True
+
+
 
     def var_list_remove(self,element:(str,str)):
         self.var_read_write.remove(element)
@@ -157,16 +185,17 @@ builtin_functions = {
 class Context:
     functions: dict[(str,str), QFunction]      # name,name_space to function
     used_qbits: int
-    scope: dict[str, list[int]]
+    scope: dict[str, dict[int,int]]
     current_name_space: str
 
     def __init__(self) -> None:
         self.functions = {}
         self.used_qbits = 0
-        self.scope = {}
+        self.scope = {'l':{1:2}}
 
     def allocate_qbits(self, n: int) -> list[int]:
         bits = list(range(self.used_qbits, self.used_qbits + n))
+        #bits = {i: bits[i] for i in range(0, len(bits))}
         self.used_qbits += n
         return bits
 
@@ -182,23 +211,26 @@ class Context:
 
         raise RuntimeError(f"Cannot find function named: {name}")
 
-    def set_variable(self, name: str, location: list[int]) -> None:
+    def set_variable(self, name: str, location: dict[int,int]) -> None:
+        location = {i: location[i] for i in range(0, len(location))}
         self.scope[name] = location
+        print(f"dfsdgfsg: {location}")
 
     def set_var_index(self, name: str, loc_num: int, loc_pos:int) -> None:
-        print(f"SCOPEcq: {self.scope} loc_num = {loc_num} loc_pos = {loc_pos}")
+        #print(f"SCOPEcq: {self.scope} loc_num = {loc_num} loc_pos = {loc_pos}")
         mod = self.scope[name]
         mod[loc_pos] = loc_num
         self.scope[name] = mod
-        print(f"SCOPEcq: {self.scope} loc_num = {loc_num} loc_pos = {loc_pos}")
+        #print(f"SCOPEcq: {self.scope} loc_num = {loc_num} loc_pos = {loc_pos}")
 
     def delete_variable(self, name: str) -> None:
         del self.scope[name]
 
     def lookup_variable(self, name: str) -> list[int]:
+        print(f"SDXFCGVHBJ: {self.scope}")
         if self.scope.get(name):
             return self.scope[name]
-
+        
         raise RuntimeError(f"Cannot find variable named: {name}")
 
 def generate(ast: list[qiwiast.ASTNode], context: Context):

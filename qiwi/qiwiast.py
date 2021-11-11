@@ -36,7 +36,7 @@ class ASTID(ASTExp):
         return f"{self.__class__.__name__}({self.name})"
 
     def count_var_use(self):
-        return [('R',self.name)]
+        return [('R',None,self.name)]
 
     def generate(self, context: qiwicg.Context) -> qiwicg.QFunction | qiwicg.QDynamicFunction | qiwicg.QBlock:
         if context.lookup_variable(self.name):
@@ -57,7 +57,7 @@ class ASTIndexedID(ASTExp):
         return f"{self.__class__.__name__}({self.name}_[{self.index}])"
 
     def count_var_use(self):
-        return [('R',str(self.index)+self.name)]
+        return [('PR',self.index,self.name)]
 
     def generate(self, context: qiwicg.Context) -> qiwicg.QBlock:
         block = qiwicg.QBlock()
@@ -317,7 +317,7 @@ class ASTFuncDef(ASTNode):
         return f"{self.__class__.__name__}({self.name}, {self.return_type}, {self.args}, {self.body})"
 
     def count_var_use(self):
-        result: list[(str,str)]
+        result: list[(str,int,str)]
         result = []
         for sta in self.body:
             if(sta.count_var_use() != None):
@@ -341,7 +341,7 @@ class ASTFuncCall(ASTExp):
         return f"{self.__class__.__name__}({self.name_space}.{self.name}, {self.args})"
 
     def count_var_use(self):
-        result : [(str,str)]
+        result : [(str,int,str)]
         result = []
         for arg in self.args:
             if(arg.count_var_use() != None):
@@ -390,45 +390,76 @@ class ASTAssignment(ASTStatement):
             return f"{self.__class__.__name__}({self.lhs}, {self.rhs},{self.type})"
 
     def count_var_use(self):
-        result: list[(str,str)]
+        result: list[(str,int,str)]
         result = []
         if(self.rhs.count_var_use() != None):
             for var in self.rhs.count_var_use():
                 result += [var]
         if(self.index == None):
-            result += [("W",self.lhs.name)]
+            result += [("W",None,self.lhs.name)]
         else:
-            result += [("PW",str(self.index)+self.lhs.name)]    #a particular index of name is rewritten
+            result += [("PW",self.index,self.lhs.name)]    #a particular index of name is rewritten
         return result
 
 
     def generate(self, context: qiwicg.Context, qf : qiwicg.QFunction) -> qiwicg.QBlock:
         block = qiwicg.QBlock()
+        print("Now")
+        print(qf.var_read_write)
+        print(f"SDXFCGVHBJ: {context.scope}")
         if(self.rhs.count_var_use() != None):
             for var in self.rhs.count_var_use():
-                
-                r_w,var_name = var
+                r_w,index,var_name = var
+                if(r_w == "W" or r_w == "PW"):          #somehow it was working even without it
+                    continue
                 qf.var_list_remove(var)
-                if(qf.var_can_kill(var_name)):
-                    print(f"Kill: {var_name}")
+                if(index==None):
+                    ifkill,keepInd = qf.var_can_kill(var_name)
+                    if((ifkill,keepInd) == (True,[])):
+                        print(f"Kill: {var_name}")
+                    elif(ifkill):
+                        print(f"Kill: {var_name}'s {keepInd}th Qubit(s)")
+                    elif((ifkill,keepInd) == (False,[])):
+                        var_loc = context.lookup_variable(var_name)
+                        var_copy_loc = context.allocate_qbits(len(var_loc))
+                        for i in range(len(var_loc)):
+                            block.add(qiwicg.QGate('cx', [var_loc[i], var_copy_loc[i]]))
+                        context.set_variable((var_name+":temp"), var_copy_loc)
+                        print(f"Persist: {var_name}")
+                    else:
+                        var_loc = context.lookup_variable(var_name)
+                        var_copy_loc = context.allocate_qbits(len(keepInd))
+                        for i in range(len(keepInd)):
+                            block.add(qiwicg.QGate('cx', [var_loc[keepInd[i]], var_copy_loc[i]]))
+                        context.set_variable((var_name+":temp"), var_copy_loc)
+                        print(f"Persist: {var_name}'s {keepInd}th Qubit(s)")
                 else:
-                    var_loc = context.lookup_variable(var_name)
-                    var_copy_loc = context.allocate_qbits(len(var_loc))
-                    for i in range(len(var_loc)):
-                        block.add(qiwicg.QGate('cx', [var_loc[i], var_copy_loc[i]]))
-                    context.set_variable((var_name+":temp"), var_copy_loc)
-                    print(f"Persist: {var_name}")
+                    ifkill = qf.var_index_can_kill(var_name,index)
+                    if(ifkill):
+                        print(f"Kill: {var_name}")
+                    else:
+                        var_loc = context.lookup_variable(var_name)
+                        var_copy_loc = context.allocate_qbits(1)[0]
+                        block.add(qiwicg.QGate('cx', [var_loc[index], var_copy_loc]))
+                        context.set_var_index(var_name, var_copy_loc, index)
+                        context.set_variable((var_name+":temp"), [var_copy_loc])
+                        print(f"Persist: {var_name}'s {index}th Qubit")
 
-                print("Now")
-                print(qf.var_read_write)
+
+            
         if(self.index == None):
-            qf.var_list_remove(("W",self.lhs.name))
+            qf.var_list_remove(("W",None,self.lhs.name))
+            if(qf.var_can_kill(self.lhs.name)==[True,[]]):         #consider the [True,lst] case
+                print(f"Dont create: {self.lhs.name}")
+                return block
+            print(f"Create: {self.lhs.name}")
         else:
-            qf.var_list_remove(("PW",str(self.index)+self.lhs.name))    #a particular index of name is rewritten
+            qf.var_list_remove(("PW",self.index,self.lhs.name))    #a particular index of name is rewritten
+            if(qf.var_index_can_kill(self.lhs.name,self.index)):
+                print(f"Dont create: {self.lhs.name}'s {self.index} qubit")
+                return block
+            print(f"Create: {self.lhs.name}'s {index} qubit")
 
-        if(qf.var_can_kill(self.lhs.name)):
-            print(f"Dont create: {self.lhs.name}")
-            return block
 
         rhs = self.rhs.generate(context)
         if isinstance(rhs, int): # constant integer

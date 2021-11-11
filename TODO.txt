@@ -22,3 +22,4 @@
 	}
 
 - ADD a shor hand "H(a[0])" to mean "a[0] = H(b)"
+- Extensively test the kill persist methords

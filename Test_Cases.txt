@@ -32,3 +32,13 @@ fn main() {
     a[1] = X(b);
     a
 }
+
+
+
+use abc as i;
+use def as j;
+fn main() {
+    a: q2 = 1;
+    b: q2 = 1;
+    j.sub(a,i.add(b , a))
+}
