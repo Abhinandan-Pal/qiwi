@@ -33,12 +33,36 @@ fn main() {
     a
 }
 
+TEST Persist-kill mechanism with bitwise
 
-
-use abc as i;
-use def as j;
 fn main() {
-    a: q2 = 1;
-    b: q2 = 1;
-    j.sub(a,i.add(b , a))
+    a: q3 = 0;
+    a[0] = H(a[0]);
+    b: q1 = 1;
+    a[1] = X(b);
+    a
+}
+
+fn main() {
+    a: q3 = 0;
+    a[0] = H(a[0]);
+    b: q1 = 1;
+    a[1] = X(b);
+    b
+}
+
+fn main() {
+    a: q3 = 0;
+    a[0] = H(a[0]);
+    b: q4 = 1;
+    a = X(a+b);
+    a
+}
+
+fn main() {
+    a: q3 = 0;
+    a[0] = H(a[0]);
+    b: q4 = 1;
+    a = X(a+b);
+    b
 }

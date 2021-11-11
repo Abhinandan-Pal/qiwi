@@ -22,5 +22,3 @@
 	}
 
 - ADD a shor hand "H(a[0])" to mean "a[0] = H(b)"
-- Extensively test the kill persist methords
-- only create those bits which are needed. a:q3 = 5 but a[1] is never used [Do we really need to add this]
