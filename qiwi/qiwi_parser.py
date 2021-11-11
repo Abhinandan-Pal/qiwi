@@ -90,15 +90,19 @@ class QiwiParser(Parser):
 #------
 	@_('ID "=" expr')
 	def assignment(self, p):
-		return qiwiast.ASTAssignment(qiwiast.ASTID(p.ID), p.expr)			# might be a bug along with line 77
+		return qiwiast.ASTAssignment(qiwiast.ASTID(p.ID), p.expr)
 
+	@_('ID "[" NUM "]" "=" expr')
+	def assignment(self, p):
+		return qiwiast.ASTAssignment(qiwiast.ASTID(p.ID) ,p.expr,index=p.NUM)
+	
 	@_('ID ":" ID "=" expr')
 	def assignment(self, p):
 		if p[2][0] != 'q':
 			raise RuntimeError(f"Unknown type {p[2]}")
 
 		num = int(p[2][1:])
-		return qiwiast.ASTAssignment(qiwiast.ASTID(p[0]), p.expr , qiwiast.ASTTypeQ(num))
+		return qiwiast.ASTAssignment(qiwiast.ASTID(p[0]), p.expr , type=qiwiast.ASTTypeQ(num))
 #------
 	@_('expr "+" expr',
    'expr "-" expr',

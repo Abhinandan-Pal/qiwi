@@ -57,7 +57,7 @@ class ASTIndexedID(ASTExp):
         return f"{self.__class__.__name__}({self.name}_[{self.index}])"
 
     def count_var_use(self):
-        return [('R',self.name)]
+        return [('R',str(self.index)+self.name)]
 
     def generate(self, context: qiwicg.Context) -> qiwicg.QBlock:
         block = qiwicg.QBlock()
@@ -375,14 +375,19 @@ class ASTFuncCall(ASTExp):
 class ASTAssignment(ASTStatement):
     lhs: ASTID
     rhs: Type[ASTExp]
-
-    def __init__(self, lhs: ASTID, rhs: Type[ASTExp], type: Optional[ASTTypeQ] = None) -> None:
+    type: Type[ASTTypeQ]
+    index: int
+    def __init__(self, lhs: ASTID, rhs: Type[ASTExp], index: int = None ,type: Optional[ASTTypeQ] = None) -> None:
         self.lhs = lhs
         self.rhs = rhs
         self.type = type
+        self.index = index
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({self.lhs}, {self.rhs})"
+        if(self.index != None):
+            return f"{self.__class__.__name__}({self.lhs}, {self.rhs},{self.index},{self.type})"
+        else:
+            return f"{self.__class__.__name__}({self.lhs}, {self.rhs},{self.type})"
 
     def count_var_use(self):
         result: list[(str,str)]
@@ -390,7 +395,10 @@ class ASTAssignment(ASTStatement):
         if(self.rhs.count_var_use() != None):
             for var in self.rhs.count_var_use():
                 result += [var]
-        result += [("W",self.lhs.name)]
+        if(self.index == None):
+            result += [("W",self.lhs.name)]
+        else:
+            result += [("PW",str(self.index)+self.lhs.name)]    #a particular index of name is rewritten
         return result
 
 
@@ -413,8 +421,11 @@ class ASTAssignment(ASTStatement):
 
                 print("Now")
                 print(qf.var_read_write)
+        if(self.index == None):
+            qf.var_list_remove(("W",self.lhs.name))
+        else:
+            qf.var_list_remove(("PW",str(self.index)+self.lhs.name))    #a particular index of name is rewritten
 
-        qf.var_list_remove(("W",self.lhs.name))
         if(qf.var_can_kill(self.lhs.name)):
             print(f"Dont create: {self.lhs.name}")
             return block
@@ -422,24 +433,6 @@ class ASTAssignment(ASTStatement):
         rhs = self.rhs.generate(context)
         if isinstance(rhs, int): # constant integer
             pass
-            '''binary = bin(rhs)[2:]
-
-            # allocate qubits
-            if isinstance(self.type, ASTTypeQ):
-                size = self.type.length
-                if len(binary) > size:
-                    raise RuntimeError(f"Type {self.type} not large enough for {rhs}")
-            else:
-                size = len(binary)
-
-            location = list(range(context.used_qbits, context.used_qbits + size))
-            context.used_qbits += size
-            
-            # set 1 bits
-            for i in range(0, size):
-                if (rhs >> i) & 1 == 1:
-                    block.add(qiwicg.QGate('x', [location[i]]))'''
-
         elif isinstance(rhs, list): # variable location reference
             location = rhs
         elif isinstance(rhs, qiwicg.QBlock):
@@ -451,12 +444,15 @@ class ASTAssignment(ASTStatement):
                     raise RuntimeError(f"Type {self.type} not large enough to store {len(location)} qubits")
                 else:
                     location += context.allocate_qbits(diff)
-
         else:
             raise RuntimeError("Unimplemented!")
 
-
-        context.set_variable(self.lhs.name, location)
+        if(self.index != None):
+            if(len(location)!= 1):
+                raise RuntimeError(f"1 qubit expected for indexed assignment.{len(location)} qubits provided")
+            context.set_var_index(self.lhs.name, location[0], self.index)
+        else:
+            context.set_variable(self.lhs.name, location)
         temp_var = []
         for key in context.scope:
             if(key.endswith(":temp")):
@@ -468,3 +464,4 @@ class ASTAssignment(ASTStatement):
             context.set_variable(key, loc)
 
         return block
+

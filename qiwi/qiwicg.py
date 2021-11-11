@@ -185,6 +185,13 @@ class Context:
     def set_variable(self, name: str, location: list[int]) -> None:
         self.scope[name] = location
 
+    def set_var_index(self, name: str, loc_num: int, loc_pos:int) -> None:
+        print(f"SCOPEcq: {self.scope} loc_num = {loc_num} loc_pos = {loc_pos}")
+        mod = self.scope[name]
+        mod[loc_pos] = loc_num
+        self.scope[name] = mod
+        print(f"SCOPEcq: {self.scope} loc_num = {loc_num} loc_pos = {loc_pos}")
+
     def delete_variable(self, name: str) -> None:
         del self.scope[name]
 

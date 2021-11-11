@@ -1,7 +1,24 @@
 - Extend a quantumn bariable by one extra bit 101 becomes 0101
+
 - Create qutatum variable of size guven by classical   int a = 5    qN: b = 10
+
 - CX gate on variables allow different size inputs
+
 - Decide if to allow controlled-swap
+
 - there is apperently a |0> reset gate. then early measurement is compulsory.
+
 - also a if on classsical gate.
+
 - allow a[0] = H(a[0]);
+
+- Do the persist kill in a bit level. Run this and then draw
+	fn main() {
+    a: q3 = 0;
+    a[0] = H(a[0]);
+    b: q1 = 1;
+    a[1] = X(b);
+    a
+	}
+
+- ADD a shor hand "H(a[0])" to mean a[0] = H(a[0])	
