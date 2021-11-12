@@ -10,6 +10,7 @@ class QGate:
     def __init__(self, name, bits) -> None:
         self.name = name
         self.connections = bits
+        #print(f"Gate Init:{self.name}({self.connections})")
 
 class QBlock:
     gates: list[QGate]

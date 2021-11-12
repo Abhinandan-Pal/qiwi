@@ -31,3 +31,5 @@
 - Divide AST into several files
 
 - Make function out of common stuff.
+
+- Force reset after every operation and persist if needed later.

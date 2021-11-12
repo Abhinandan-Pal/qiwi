@@ -5,10 +5,10 @@ from sly import Lexer
 class QiwiLexer(Lexer):
     tokens = { NUM, ID, WHILE, IF, ELSE, PRINT, FN,
                EQ, LT, LE, GT, GE, NE, USE, AS, 
-               IF_QC, IF_QM AND, OR, NAND, NOR, XOR, XNOR }
+               IF_QC, IF_QM ,AND, OR, NAND, NOR, XOR, XNOR }
 
 
-    literals = { '(', ')', '{', '}', '[',']' ,';' , '-' , '+' , '*' , '/' , '=' , ',' , '.', ':'}
+    literals = { '~','(', ')', '{', '}', '[',']' ,';' , '-' , '+' , '*' , '/' , '=' , ',' , '.', ':'}
 
     # String containing ignored characters
     ignore = ' \t'

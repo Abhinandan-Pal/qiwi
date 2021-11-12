@@ -72,3 +72,21 @@ fn main() {
     a = X(a+b);
     b
 }
+
+
+TEST IF MULTIPLEX with persist kill and reset
+fn main() {
+    a: q1 = 1;
+    b: q1 = 1;
+    a ~ if_qm (b) {H(a)} else {X(a)};
+    a
+}
+
+fn main() {
+    a: q1 = 1;
+    b: q1 = 1;
+    a ~ if_qm (b) {H(a)} else {X(a)};
+    b
+}
+
+
