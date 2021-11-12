@@ -33,3 +33,5 @@
 - Make function out of common stuff.
 
 - Force reset after every operation and persist if needed later.
+
+-Define persist in a way so that a[0] keeps a new copy of only a[0]

@@ -57,7 +57,7 @@ class ASTIndexedID(ASTExp):
         return f"{self.__class__.__name__}({self.name}_[{self.index}])"
 
     def count_var_use(self):
-        return [('R',str(self.index)+self.name)]
+        return [('R',self.name)]
 
     def generate(self, context: qiwicg.Context) -> qiwicg.QBlock:
         block = qiwicg.QBlock()
@@ -193,23 +193,23 @@ class ASTIf_qc(ASTExp):
 
 def kill_persist_fnc(context: qiwicg.Context, qf : qiwicg.QFunction,lhs,index,rhs1,rhs2: Optional[Type[ASTExp]] = None):
     block = qiwicg.QBlock()    
-    print(f"BEFORE IF \t: {qf.var_read_write}")
+    #print(f"BEFORE IF \t: {qf.var_read_write}")
     temp = []
     if(rhs1.count_var_use() != None):
         for var in rhs1.count_var_use():
             qf.var_list_remove(var)
-            temp+=var
+            temp.append(var)
     
     if(rhs2 != None):
         if(rhs2.count_var_use() != None):
             for var in rhs2.count_var_use():
                 qf.var_list_remove(var)
-                temp+=var     
-    print(f"MIDDLE IF \t: {qf.var_read_write}")            
-    if(index == None):
-        qf.var_list_remove(("W",lhs.name))
-    else:
-        qf.var_list_remove(("PW",str(index)+lhs.name))    #a particular index of name is rewritten
+                temp.append(var)    
+    #print(f"MIDDLE IF \t: {qf.var_read_write}")            
+    #if(index == None):
+    qf.var_list_remove(("W",lhs.name))
+    #else:
+        #qf.var_list_remove(("PW",str(index)+lhs.name))    #a particular index of name is rewritten
     
     if(qf.var_can_kill(lhs.name)):
         if(index == None):
@@ -223,7 +223,7 @@ def kill_persist_fnc(context: qiwicg.Context, qf : qiwicg.QFunction,lhs,index,rh
         else:
             print(f"Create: {lhs.name}'s {index} qubit")
     qf.var_read_write=temp+qf.var_read_write
-    print(f"END IF \t: {qf.var_read_write}")
+    #print(f"END IF \t: {qf.var_read_write}")
     '''for rhs in [rhs1,rhs2]:
         if(rhs == None):
             continue
@@ -270,28 +270,29 @@ class ASTIf_qm(ASTStatement):
         val = []
         if(self.if_exp.count_var_use() != None):
             val += self.if_exp.count_var_use()
-        if(self.lhs_index == None):
-            val += [("W",self.lhs.name+":if")]
-        else:
-            val += [("PW",str(self.lhs.index)+self.lhs.name+":if")]
+        #if(self.lhs_index == None):
+        val += [("W",self.lhs.name+":if")]
+        #else:
+            #val += [("PW",str(self.lhs.index)+self.lhs.name+":if")]
         if(self.else_exp != None):    
             if(self.else_exp.count_var_use() != None):
                 val += self.else_exp.count_var_use()
-            if(self.lhs_index == None):
-                val += [("W",self.lhs.name+":else")]
-            else:
-                val += [("PW",str(self.lhs.index)+self.lhs.name+":else")]
+        else:
+            if(self.lhs.count_var_use() != None):
+                val += self.lhs.count_var_use()
+        #if(self.lhs_index == None):
+        val += [("W",self.lhs.name+":else")]
+        #else:
+            #val += [("PW",str(self.lhs.index)+self.lhs.name+":else")]
         if(self.cond.count_var_use() != None):
             val += self.cond.count_var_use()
-        if(self.lhs_index == None):
-            val += [("R",self.lhs.name+":if")]
-        if(self.else_exp != None):    
-            if(self.lhs_index == None):
-                val += [("R",self.lhs.name+":else")]
-        if(self.lhs_index == None):
-            val += [("W",self.lhs.name)]
-        else:
-            val += [("PW",str(self.lhs.index)+self.lhs.name)]    #a particular index of name is rewritten
+        val += [("R",self.lhs.name+":if")]  
+        val += [("R",self.lhs.name+":else")]
+
+        #if(self.lhs_index == None):
+        val += [("W",self.lhs.name)]
+        #else:
+            #val += [("PW",str(self.lhs.index)+self.lhs.name)]    #a particular index of name is rewritten
         return val
     
     def generate(self, context: qiwicg.Context, qf : qiwicg.QFunction) -> qiwicg.QBlock:
@@ -299,14 +300,23 @@ class ASTIf_qm(ASTStatement):
         blc,sta = kill_persist_fnc(context,qf,self.lhs,self.lhs_index,self.if_exp,self.else_exp)
         if(sta):
             return block
-        block.append(kill_persist_fnc(blc))
-        
-
+        block.append(blc)
         
                        #TODO for indexed LHS also, also test without else
-        if_assign = ASTAssignment(ASTID((self.lhs.name+":if")), self.if_exp)
-        else_assign = ASTAssignment(ASTID((self.lhs.name+":else")), self.else_exp)
-
+        if(type(self.lhs.name) == ASTID):
+            if_assign = ASTAssignment(ASTID((self.lhs.name+":if")), self.if_exp)
+            if(self.else_exp != None):
+                else_assign = ASTAssignment(ASTID((self.lhs.name+":else")), self.else_exp)
+            else:
+                else_assign = ASTAssignment(ASTID((self.lhs.name+":else")),ASTID((self.lhs.name)))
+        
+        else: #it will be of type ASTIndexedID or there would have been error on __init__ 
+            if_assign = ASTAssignment(ASTID((self.lhs.name+":if")), self.if_exp)
+            if(self.else_exp != None):
+                else_assign = ASTAssignment(ASTID((self.lhs.name+":else")), self.else_exp)
+            else:
+                else_assign = ASTAssignment(ASTID((self.lhs.name+":else")),ASTIndexedID((self.lhs.name),self.lhs.index))
+        
         if_assign = if_assign.generate(context,qf)
         if_loc = if_assign.output
         block.append(if_assign)
@@ -314,12 +324,12 @@ class ASTIf_qm(ASTStatement):
         lhs = self.lhs.generate(context)
         
         lhs_loc = lhs.output
-        else_loc = lhs.output
+        #else_loc = lhs.output
         
-        if(else_assign != None):
-            else_assign = else_assign.generate(context,qf)
-            else_loc = else_assign.output
-            block.append(else_assign) 
+        #if(else_assign != None):
+        else_assign = else_assign.generate(context,qf)
+        else_loc = else_assign.output
+        block.append(else_assign) 
         
         block.append(lhs)
         cond = self.cond.generate(context)
@@ -349,8 +359,11 @@ class ASTIf_qm(ASTStatement):
         context.free_location(else_loc);
         context.free_location(cond_loc);
         context.free_variable(self.lhs.name);
-        for loc in context.lookup_variable(self.lhs.name):
-            block.add(qiwicg.QGate('reset', [loc]))
+        if(self.lhs_index != None):
+            block.add(qiwicg.QGate('reset', [context.lookup_variable(self.lhs.name)[self.lhs.index]]))
+        else:
+            for loc in context.lookup_variable(self.lhs.name):
+                block.add(qiwicg.QGate('reset', [loc]))
 
 
         #print(f"dtrfyghljnkm \t:{max(len(if_loc),len(else_loc))}->{result_loc}")
@@ -595,6 +608,8 @@ class ASTAssignment(ASTStatement):
             for var in self.rhs.count_var_use():
                 qf.var_list_remove(var)
         if(self.index == None):
+            print(f"write AZSXFDCGVHB : \t {self.lhs.name}")
+
             qf.var_list_remove(("W",self.lhs.name))
         else:
             qf.var_list_remove(("PW",str(self.index)+self.lhs.name))    #a particular index of name is rewritten
@@ -613,7 +628,6 @@ class ASTAssignment(ASTStatement):
 
         if(self.rhs.count_var_use() != None):
             for var in self.rhs.count_var_use():
-                
                 r_w,var_name = var
                 if(qf.var_can_kill(var_name)):
                     print(f"Kill: {var_name}")

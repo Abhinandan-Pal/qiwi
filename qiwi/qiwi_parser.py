@@ -174,7 +174,7 @@ class QiwiParser(Parser):
 	@_('expr "~" if_qm_expr')
 	def if_qm_state(self,p):
 		a,b = p.if_qm_expr
-		return qiwiast.ASTIf_qm(p.expr0, a, b)
+		return qiwiast.ASTIf_qm(p.expr, a, b)
 	
 	@_('expr "~" if_qm_expr ELSE "{" expr "}"')
 	def if_qm_state(self,p):
