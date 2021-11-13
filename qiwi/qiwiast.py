@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import Optional, Type
 
 from . import qiwicg
-
+import copy
 class ASTNode:
     pass
 
@@ -554,10 +554,36 @@ class ASTAssignment(ASTStatement):
 
 
     def generate(self, context: qiwicg.Context, qf : qiwicg.QFunction) -> qiwicg.QBlock:
+        print(f"{self}")
         rhs_block = qiwicg.QBlock()
         block = qiwicg.QBlock()
         print(f"BEFORE: {context.scope}->{qf.var_read_write}")
         flag = False
+
+        qf_copy = copy.deepcopy(qf)
+        if(self.rhs.count_var_use() != None):
+            for var in self.rhs.count_var_use():
+                qf_copy.var_list_remove(var)
+        if(self.index == None):
+            qf_copy.var_list_remove(("W",None,self.lhs.name))
+        else:
+            qf_copy.var_list_remove(("W",self.index,self.lhs.name))    #a particular index of name is rewritten
+        
+        if(qf_copy.var_can_kill("W",self.lhs.name,self.index)):
+            if(self.index == None):
+                print(f"\tDont create: {self.lhs.name}")
+            else:
+                print(f"\tDon't create: {self.lhs.name}'s {self.index} qubit")
+            if(self.rhs.count_var_use() != None):
+                for var in self.rhs.count_var_use():
+                    qf.var_list_remove(var)
+            return block
+        else:
+            if(self.index == None):
+                print(f"\tCreate: {self.lhs.name}")
+            else:
+                print(f"\tCreate: {self.lhs.name}'s {self.index} qubit")
+        
         rhs = self.rhs.generate(context,qf)
         if isinstance(rhs, int): # constant integer
             pass
@@ -574,23 +600,11 @@ class ASTAssignment(ASTStatement):
                     location += context.allocate_qbits(diff)
         else:
             raise RuntimeError("Unimplemented!")
-
         if(self.index == None):
             qf.var_list_remove(("W",None,self.lhs.name))
         else:
             qf.var_list_remove(("W",self.index,self.lhs.name))    #a particular index of name is rewritten
-        
-        if(qf.var_can_kill("W",self.lhs.name,self.index)):
-            if(self.index == None):
-                print(f"\tDont create: {self.lhs.name}")
-            else:
-                print(f"\tDon't create: {self.lhs.name}'s {self.index} qubit")
-            return block
-        else:
-            if(self.index == None):
-                print(f"\tCreate: {self.lhs.name}")
-            else:
-                print(f"\tCreate: {self.lhs.name}'s {self.index} qubit")
+
         block.append(rhs_block)
         if(self.index != None):
             if(len(location)!= 1):
