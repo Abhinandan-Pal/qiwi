@@ -88,6 +88,7 @@ class ASTInt(ASTExp):
                 block.add(qiwicg.QGate('x', [location[i]]))
         block.output = location
         return block
+
 class ASTStatement(ASTNode):
     def generate(self, _: qiwicg.Context, a: qiwicg.QFunction) -> qiwicg.QBlock:
         raise NotImplementedError
@@ -303,7 +304,7 @@ class ASTIf_qm(ASTStatement):
         block.append(blc)
         
                        #TODO for indexed LHS also, also test without else
-        if(type(self.lhs.name) == ASTID):
+        if(isinstance(self.lhs,ASTID)):
             if_assign = ASTAssignment(ASTID((self.lhs.name+":if")), self.if_exp)
             if(self.else_exp != None):
                 else_assign = ASTAssignment(ASTID((self.lhs.name+":else")), self.else_exp)

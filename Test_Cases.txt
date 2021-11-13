@@ -108,3 +108,8 @@ fn main() {
     a[0] ~ if_qm (b) {H(a[0])};
     a
 }
+
+
+[dist(str,dist(int,int))]
+
+a,[0:3,2:4,6:8]

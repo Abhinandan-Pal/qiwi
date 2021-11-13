@@ -35,3 +35,10 @@
 - Force reset after every operation and persist if needed later.
 
 -Define persist in a way so that a[0] keeps a new copy of only a[0]
+
+- a = 2 + 3 + 4 ..... constant fold to a = 9
+
+- to handel expr = if_qm(){}{}. 
+
+c = if_qm(){}{}
+a = c + b
