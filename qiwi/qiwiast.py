@@ -36,7 +36,7 @@ class ASTID(ASTExp):
         return f"{self.__class__.__name__}({self.name})"
 
     def count_var_use(self):
-        return [('R',self.name)]
+        return [('R',None,self.name)]
 
     def generate(self, context: qiwicg.Context, qf : qiwicg.QFunction) -> qiwicg.QFunction | qiwicg.QDynamicFunction | qiwicg.QBlock:
         if context.lookup_variable(self.name):
@@ -61,7 +61,7 @@ class ASTIndexedID(ASTExp):
         return f"{self.__class__.__name__}({self.name}_[{self.index}])"
 
     def count_var_use(self):
-        return [('R',self.name)]
+        return [('R',self.index,self.name)]
 
     def generate(self, context: qiwicg.Context, qf : qiwicg.QFunction) -> qiwicg.QBlock:
         block = qiwicg.QBlock()
@@ -122,16 +122,22 @@ class ASTIf_qc(ASTExp):
         if(self.target_func.count_var_use() != None):
             val += self.target_func.count_var_use()
         for arg in t_func_args:
-            #if (type(arg) == ASTIndexedID):
-                #val += [("PW",str(arg.index)+arg.name)]
-            #elif(type(arg) == ASTID):
-            val += [("W",arg.name)]
+            if (type(arg) == ASTIndexedID):
+                val += [("W",arg.index,arg.name)]
+            elif(type(arg) == ASTID):
+                val += [("W",None,arg.name)]
         if(self.left_cond.count_var_use() != None):
             val += self.left_cond.count_var_use()
+        if(self.left_cond.count_var_use() != None):
+            for rw,index,name in self.left_cond.count_var_use():
+                val += [("W",index,name)]
+
         if(self.right_cond != None):    
             if(self.right_cond.count_var_use() != None):
                 val += self.right_cond.count_var_use()
-
+            if(self.right_cond.count_var_use() != None):
+                for rw,index,name in self.right_cond.count_var_use():
+                    val += [("W",index,name)]
         
         
 
@@ -541,9 +547,9 @@ class ASTAssignment(ASTStatement):
             for var in self.rhs.count_var_use():
                 result += [var]
         if(self.index == None):
-            result += [("W",self.lhs.name)]
+            result += [("W",None,self.lhs.name)]
         else:
-            result += [("PW",str(self.index)+self.lhs.name)]    #a particular index of name is rewritten
+            result += [("W",self.index,self.lhs.name)]    #a particular index of name is rewritten
         return result
 
 
@@ -570,21 +576,21 @@ class ASTAssignment(ASTStatement):
             raise RuntimeError("Unimplemented!")
 
         if(self.index == None):
-            qf.var_list_remove(("W",self.lhs.name))
+            qf.var_list_remove(("W",None,self.lhs.name))
         else:
-            qf.var_list_remove(("PW",str(self.index)+self.lhs.name))    #a particular index of name is rewritten
+            qf.var_list_remove(("W",self.index,self.lhs.name))    #a particular index of name is rewritten
         
-        if(qf.var_can_kill(self.lhs.name)):
+        if(qf.var_can_kill("W",self.lhs.name,self.index)):
             if(self.index == None):
-                print(f"Dont create: {self.lhs.name}")
+                print(f"\tDont create: {self.lhs.name}")
             else:
-                print(f"Don't create: {self.lhs.name}'s {self.index} qubit")
+                print(f"\tDon't create: {self.lhs.name}'s {self.index} qubit")
             return block
         else:
             if(self.index == None):
-                print(f"Create: {self.lhs.name}")
+                print(f"\tCreate: {self.lhs.name}")
             else:
-                print(f"Create: {self.lhs.name}'s {self.index} qubit")
+                print(f"\tCreate: {self.lhs.name}'s {self.index} qubit")
         block.append(rhs_block)
         if(self.index != None):
             if(len(location)!= 1):
@@ -601,24 +607,44 @@ def create_temp_var(id:ASTID,context: qiwicg.Context,qf : qiwicg.QFunction):
     if(type(id) != ASTID) and (type(id) != ASTIndexedID):
         raise RuntimeError("Unimplemented: function is meant for ASTID")
     var_name = id.name
-    if(qf.var_can_kill(var_name)):
-        print(f"Kill: {var_name}")
+    if(type(id) == ASTIndexedID):
+        var_index = str(id.index)
+        if(qf.var_can_kill("R",var_name,id.index)):
+            print(f"\tKill: {var_name}")
+        else:
+            var_loc = context.lookup_variable(var_name)[id.index]
+            var_copy_loc = context.allocate_qbits(1)[0]
+            block.add(qiwicg.QGate('cx', [var_loc, var_copy_loc]))
+            context.set_variable((var_name+":temp"+"/"+var_index), var_copy_loc)        
+            print(f"\tPersist: {var_name}")
+
     else:
-        var_loc = context.lookup_variable(var_name)
-        var_copy_loc = context.allocate_qbits(len(var_loc))
-        for i in range(len(var_loc)):
-            block.add(qiwicg.QGate('cx', [var_loc[i], var_copy_loc[i]]))
-        context.set_variable((var_name+":temp"), var_copy_loc)
-        print(f"Persist: {var_name}")
+        if(qf.var_can_kill("R",var_name,None)):
+            print(f"\tKill: {var_name}")
+        else:
+            var_loc = context.lookup_variable(var_name)
+            var_copy_loc = context.allocate_qbits(len(var_loc))
+            for i in range(len(var_loc)):
+                block.add(qiwicg.QGate('cx', [var_loc[i], var_copy_loc[i]]))
+            context.set_variable((var_name+":temp"), var_copy_loc)
+            print(f"\tPersist: {var_name}")
     print(f"MIDDLE: {context.scope}->{qf.var_read_write}")
     return block
+
+
 
 def replace_with_temp(id:ASTID,context: qiwicg.Context,qf : qiwicg.QFunction):
     if(type(id) != ASTID) and (type(id) != ASTIndexedID):
         raise RuntimeError("Unimplemented: function is meant for ASTID")
-    key = id.name+":temp"
-    if key in context.scope.keys():
-        loc = context.scope.pop(key)
-        context.set_variable(id.name, loc)
+    if(type(id) == ASTID):
+        key = id.name+":temp"
+        if key in context.scope.keys():
+            loc = context.scope.pop(key)
+            context.set_variable(id.name, loc)
+    else:
+        key = id.name+":temp"+"/"+str(id.index)
+        if key in context.scope.keys():
+            loc = context.scope.pop(key)
+            context.set_var_index(id.name,loc,id.index)
     print(f"END: {id.name}->{qf.var_read_write}")
     

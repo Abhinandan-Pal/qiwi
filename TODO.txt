@@ -47,3 +47,5 @@ a = c + b
 
 -REMEMBER IF ELSE PART NOT MENTIONED ITS TAKEN AS if(){}else{0}
 - check what happens for a = a + 1 now
+
+- DO Q-3AC or this will mess up persist kill as threre can be mutiple temp on a single variable

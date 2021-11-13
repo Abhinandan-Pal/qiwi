@@ -43,7 +43,7 @@ class QBlock:
 
 class QFunction:
     definition: qiwiast.ASTFuncDef
-    var_read_write: List[(str,str)]
+    var_read_write: List[(str,int,str)]
 
     def __init__(self, function: qiwiast.ASTFuncDef) -> None:
         self.definition = function
@@ -51,12 +51,38 @@ class QFunction:
         print(f"var_read_write:[{self.definition.name.name}]")
         print(self.var_read_write)
 
-    def var_can_kill(self,var:str):
+    def var_can_kill(self,r_w,var:str,index:int):
+        print(f"XCGMVHB<J: {self.var_read_write} [{(r_w,index,var)}]")
         for entry in self.var_read_write:
-            if(entry == ('W',var)):
-                return True 
-            elif(entry == ('R',var)):
-                return False
+            r_w_v,index_v,var_v = entry
+            if(r_w == 'R' and index == None):
+                if(entry == ('W',None,var)):
+                    return True 
+                elif((r_w_v,var_v) == ('R',var)):
+                    return False
+            elif(r_w == 'W'and index == None):
+                if(entry == ('W',None,var)):
+                    return True 
+                elif((r_w_v,var_v) == ('R',var)):
+                    return False
+            elif(r_w == 'R' and index != None):
+                if(entry == ('W',None,var)):
+                    return True 
+                elif(entry == ('R',None,var)):
+                    return False
+                elif(entry == ('W',index,var)):
+                    return True 
+                elif(entry == ('R',index,var)):
+                    return False
+            elif(r_w == 'W' and index != None):
+                if(entry == ('W',None,var)):
+                    return True 
+                elif(entry == ('R',None,var)):
+                    return False
+                elif(entry == ('W',index,var)):
+                    return True 
+                elif(entry == ('R',index,var)):
+                    return False
         return True 
 
     def var_list_remove(self,element:(str,str)):
@@ -187,7 +213,7 @@ class Context:
         self.scope[name] = location
 
     def set_var_index(self, name: str, loc_num: int, loc_pos:int) -> None:
-        print(f"SCOPEcq: {self.scope} loc_num = {loc_num} loc_pos = {loc_pos}")
+        print(f"SCOPEcq: {self.scope} name = {name} loc_num = {loc_num} loc_pos = {loc_pos}")
         mod = self.scope[name]
         mod[loc_pos] = loc_num
         self.scope[name] = mod
