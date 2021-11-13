@@ -1,7 +1,6 @@
 fn main() {
     a: q1 = 1;
     b: q1 = 1;
-    c: q1 = 1;
-    a ~ if_qm (c) {H(b)} else {X(b)};
-    a
+    a = if_qm (b) {H(a)} else {X(a)};
+    b
 }

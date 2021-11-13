@@ -42,3 +42,8 @@
 
 c = if_qm(){}{}
 a = c + b
+
+- Error message when try to set varaible name with keyword
+
+-REMEMBER IF ELSE PART NOT MENTIONED ITS TAKEN AS if(){}else{0}
+- check what happens for a = a + 1 now
