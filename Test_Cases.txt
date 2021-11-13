@@ -2,9 +2,9 @@ TEST ALL IF_QC STATEMENTS
 
 fn main() {
     a: q3 = 0;
-    if_qc(a[0]) {H(a[2])};
-    if_qc(a[0] and a[1]){X(a[2])};
-    if_qc (a[0] or a[1]){X(a[2])};
+    if_qc(a[2]) {H(a[0])};
+    if_qc(a[2] and a[1]){X(a[0])};
+    if_qc (a[2] or a[1]){X(a[0])};
     if_qc(a[2] nand a[1]){X(a[0])};
     if_qc(a[2] nor a[1]){X(a[0])};
     if_qc(a[2] xor a[1]){X(a[0])};
@@ -78,34 +78,34 @@ TEST IF MULTIPLEX with persist kill and reset
 fn main() {
     a: q1 = 1;
     b: q1 = 1;
-    a ~ if_qm (b) {H(a)} else {X(a)};
+    a = if_qm (b) {H(a)} else {X(a)};
     a
 }
 
 fn main() {
     a: q1 = 1;
     b: q1 = 1;
-    a ~ if_qm (b) {H(a)} else {X(a)};
+    a = if_qm (b) {H(a)} else {X(a)};
     b
 }
 
 fn main() {
     a: q1 = 1;
     b: q1 = 0;
-    a ~ if_qm (b) {H(a)};
+    a = if_qm (b) {H(a)};
     a
 }
 
 fn main() {
     a: q2 = 1;
     b: q1 = 0;
-    a ~ if_qm (b) {H(a)};
+    a = if_qm (b) {H(a)};
     a
 }
 fn main() {
     a: q2 = 1;
     b: q1 = 0;
-    a[0] ~ if_qm (b) {H(a[0])};
+    a[0] = if_qm (b) {H(a[0])};
     a
 }
 

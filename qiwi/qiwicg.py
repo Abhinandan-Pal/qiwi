@@ -80,7 +80,7 @@ class QFunction:
         block = QBlock()
         for statement in self.definition.body[:-1]:
             block.append(statement.generate(context,self))
-        last_exp_block = self.definition.body[-1].generate(context)
+        last_exp_block = self.definition.body[-1].generate(context,self)
         block.append(last_exp_block)
         block.output = last_exp_block.output
 
