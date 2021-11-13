@@ -87,9 +87,9 @@ class QiwiParser(Parser):
 	@_('if_qc_state')
 	def statement(self, p):
 		return p.if_qc_state
-	'''@_('if_qm_state')
+	@_('if_qm_state')
 	def statement(self, p):
-		return p.if_qm_state'''
+		return p.if_qm_state
 #------
 	@_('ID "=" expr')
 	def assignment(self, p):
@@ -171,15 +171,15 @@ class QiwiParser(Parser):
 	def op_qc(self, p):
 		return p[0]
 #-----
-	@_('if_qm_expr')
-	def expr(self,p):
+	@_('expr "~" if_qm_expr')
+	def if_qm_state(self,p):
 		a,b = p.if_qm_expr
-		return qiwiast.ASTIf_qm(a, b)
+		return qiwiast.ASTIf_qm(p.expr, a, b)
 	
-	@_('if_qm_expr ELSE "{" expr "}"')
-	def expr(self,p):
+	@_('expr "~" if_qm_expr ELSE "{" expr "}"')
+	def if_qm_state(self,p):
 		a,b = p.if_qm_expr
-		return qiwiast.ASTIf_qm( a, b, p.expr)		
+		return qiwiast.ASTIf_qm(p.expr0, a, b, p.expr1)		
 
 	@_('IF_QM "(" expr ")" "{" expr "}"')
 	def if_qm_expr(self,p):
