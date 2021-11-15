@@ -29,8 +29,10 @@ class ASTTypeQ(ASTNode):
 
 class ASTID(ASTExp):
     name: str
+    persist_status: str
     def __init__(self, name: str) -> None:
         self.name = name
+        self.persist_status = "UnKnown"
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.name})"
@@ -44,7 +46,7 @@ class ASTID(ASTExp):
             qf.var_list_remove(self.count_var_use()[0])
             block.append(create_temp_var(self,context,qf))
             block.output = context.lookup_variable(self.name)   
-            replace_with_temp(self,context,qf)
+            replace_with_temp(self,context,qf)                  #SHOULD THIS CALL BE HERE?
             return block
             
         return context.lookup_function(self.name,self.name_space)
@@ -52,10 +54,11 @@ class ASTID(ASTExp):
 class ASTIndexedID(ASTExp):
     name: str
     index: int
-
+    persist_status: str
     def __init__(self, name: str, index: int) -> None:
         self.name = name
         self.index = index
+        self.persist_status = "UnKnown"
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.name}_[{self.index}])"
@@ -456,7 +459,7 @@ class ASTFuncDef(ASTNode):
     name: ASTID
     body: list[ASTStatement]
     return_type: Optional[ASTTypeQ]
-    args: list[tuple[ASTID, ASTTypeQ]]
+    args: list[tuple[ASTID, ASTTypeQ,bool]]
 
     def __init__(self, name: ASTID, return_type: Optional[ASTTypeQ], args: list[tuple[ASTID, ASTTypeQ]], body: list[ASTStatement]) -> None:
         self.name = name
@@ -503,14 +506,21 @@ class ASTFuncCall(ASTExp):
         block = qiwicg.QBlock()
         
         argloc = []
+        persist_info = []
         for arg in self.args:
             argblock = arg.generate(context,qf)
             if(type(argblock) == int):
                 raise RuntimeError("Only variables can be placed in function")
             block.append(argblock)
             argloc.append(argblock.output)
+            if(type(arg)!=ASTID and type(arg)!=ASTIndexedID):
+                persist_info.append((False,len(argblock.output)))
+            else:
+                if (arg.persist_status=="UnKnown"): 
+                    raise RuntimeError("Debug Line: Should never occur")
+                persist_info.append(((arg.persist_status=="PERSIST"),len(argblock.output)))
         
-        func = context.lookup_function(self.name.name, self.name_space)
+        func = context.lookup_function(self.name.name,persist_info, self.name_space)
         if isinstance(func, qiwicg.QFunction):
             body = func.generate(context, argloc)
         elif isinstance(func, qiwicg.QDynamicFunction):
@@ -624,17 +634,20 @@ def create_temp_var(id:ASTID,context: qiwicg.Context,qf : qiwicg.QFunction):
     if(type(id) == ASTIndexedID):
         var_index = str(id.index)
         if(qf.var_can_kill("R",var_name,id.index)):
-            print(f"\tKill: {var_name}")
+            print(f"\tKill: {var_name}:{id.index}")
+            id.persist_status = "KILL"
         else:
             var_loc = context.lookup_variable(var_name)[id.index]
             var_copy_loc = context.allocate_qbits(1)[0]
             block.add(qiwicg.QGate('cx', [var_loc, var_copy_loc]))
             context.set_variable((var_name+":temp"+"/"+var_index), var_copy_loc)        
-            print(f"\tPersist: {var_name}")
+            print(f"\tPersist: {var_name}:{id.index}")
+            id.persist_status = "PERSIST"
 
     else:
         if(qf.var_can_kill("R",var_name,None)):
             print(f"\tKill: {var_name}")
+            id.persist_status = "KILL"
         else:
             var_loc = context.lookup_variable(var_name)
             var_copy_loc = context.allocate_qbits(len(var_loc))
@@ -642,6 +655,7 @@ def create_temp_var(id:ASTID,context: qiwicg.Context,qf : qiwicg.QFunction):
                 block.add(qiwicg.QGate('cx', [var_loc[i], var_copy_loc[i]]))
             context.set_variable((var_name+":temp"), var_copy_loc)
             print(f"\tPersist: {var_name}")
+            id.persist_status = "PERSIST"
     print(f"MIDDLE: {context.scope}->{qf.var_read_write}")
     return block
 

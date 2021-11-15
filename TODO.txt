@@ -49,3 +49,15 @@ a = c + b
 - check what happens for a = a + 1 now
 
 - DO Q-3AC or this will mess up persist kill as threre can be mutiple temp on a single variable
+
+-Define constants to be imported as fn abc(){5}  then call as i.abc
+
+- A Debug mode where it shows the values in the Qubit lines after each line is executed by pressing <enter> can convert stuff to zero[stop displaying value of that qubit] in simulator as no entanglement issue
+
+- Single unidifed data type thing become qubit on superposition untill then they are classical. Must allow "a:3 = 0" or "a:3 = max" so one can get |----> and |++++> on H
+
+- Replace ASTId.persist_status's data type from str to something more optimal
+
+- id add(a:q7) and we give a q3 at call then increase it to q7
+
+- Take info from function to get better idea od persist kill- currently we are just choosing which function to use.

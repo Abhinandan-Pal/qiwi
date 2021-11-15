@@ -49,8 +49,8 @@ while (len(use_files)!=0):
 print(collector)
 
 
-mainfunc = context.functions[('main','self')]
+mainfunc = context.functions[('main','self')][0]
 mainargs = list(map(lambda x: list(range(context.used_qbits, context.used_qbits + x[1].length)), mainfunc.definition.args))
-code = context.functions[('main','self')].generate(context, []).generate_qasm(context)
+code = context.functions[('main','self')][0].generate(context, []).generate_qasm(context)
 #subprocess.run(['xclip', '-selection', 'clipboard', '-in'], input=code.encode('utf-8'))
 print(code)

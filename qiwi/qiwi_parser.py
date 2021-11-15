@@ -71,7 +71,18 @@ class QiwiParser(Parser):
 			num = None
 		else:
 			num = int(p[2][1:])
-		return (qiwiast.ASTID(p[0]), qiwiast.ASTTypeQ(num))
+		return (qiwiast.ASTID(p[0]), qiwiast.ASTTypeQ(num),False)
+
+	@_('PERSIST ID ":" ID')
+	def argdecl(self, p):
+		if p[3][0] != 'q':
+			raise RuntimeError(f"Unknown type {p[3]}")
+
+		if (p[3][1:] == 'N'):
+			num = None
+		else:
+			num = int(p[3][1:])
+		return (qiwiast.ASTID(p[1]), qiwiast.ASTTypeQ(num), True)
 #------
 	@_('expr')						#basically return statement
 	def statements(self, p):

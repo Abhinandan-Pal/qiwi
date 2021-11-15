@@ -73,6 +73,14 @@ fn main() {
     b
 }
 
+fn main() {
+    a: q3 = 0;
+    a[1] = H(a[0]);
+    b: q4 = 1;
+    a = X(a+b);
+    a
+}
+
 
 TEST IF MULTIPLEX with persist kill and reset
 fn main() {
@@ -110,6 +118,26 @@ fn main() {
 }
 
 
-[dist(str,dist(int,int))]
-
-a,[0:3,2:4,6:8]
+FUNCTION CALL
+fn main() {
+    a: q2 = 1;
+    b: q1 = 0;
+    c = add(a,b);
+    c
+}
+fn add(a:qN,b:qN)
+{
+    3
+}
+fn add(persist a:qN,b:qN)
+{
+    1
+}
+fn add(a:qN,persist b:qN)
+{
+    2
+}
+fn add(persist a:qN,persist b:qN)
+{
+    0
+}

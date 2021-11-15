@@ -182,7 +182,7 @@ builtin_functions = {
 
 
 class Context:
-    functions: dict[(str,str), QFunction]      # name,name_space to function
+    functions: dict[(str,str), list(QFunction)]      # name,name_space to function
     used_qbits: int
     scope: dict[str, list[int]]
     current_name_space: str
@@ -198,14 +198,37 @@ class Context:
         return bits
 
     def add_function(self, name: str, function: QFunction):
-        self.functions[(name, self.current_name_space)] = function
+        if self.functions.get((name,self.current_name_space)):
+            self.functions[(name, self.current_name_space)].append(function)
+        else:
+            self.functions[(name, self.current_name_space)]= [function]
 
-    def lookup_function(self, name: str , name_space: Optional[str] = "self" ) -> QFunction | QDynamicFunction:
+    def lookup_function(self, name: str , args_call:list(int,bool) ,name_space: Optional[str] = "self" ) -> QFunction | QDynamicFunction:
         if builtin_functions.get(name):
             return builtin_functions[name]
         
         if self.functions.get((name,name_space)):
-            return self.functions[(name,name_space)]
+            scores = []
+            fn_index = 0
+            for fnc in self.functions.get((name,name_space)):
+                score = 0
+                arg_index = 0
+                for arg in fnc.definition.args:
+                    if(arg[2]!= args_call[arg_index][1]):
+                        if(arg[1].length!=None):
+                            score -= arg[1].length
+                        else:
+                            score -= args_call[arg_index][0]
+                    else:
+                        if(arg[1].length!=None):
+                            score += arg[1].length
+                        else:
+                            score += args_call[arg_index][0]
+                    arg_index += 1
+                scores.append(score)
+            print(f"{name} SCORES: {scores}")
+            max_index = scores.index(max(scores))
+            return self.functions.get((name,name_space))[max_index]
 
         raise RuntimeError(f"Cannot find function named: {name}")
 
