@@ -141,3 +141,26 @@ fn add(persist a:qN,persist b:qN)
 {
     0
 }
+
+
+CLASSICAL BIT
+fn main() {
+    a: c = 32;
+    b: c = 25;
+    c: qN = a - b - 5;
+    c
+}
+
+Length of Q-Variable
+fn main() {
+    a: qN = 32;
+    b: c = |a|;
+    c: qN = b;
+    c
+}
+fn main() {
+    a: qN = 31;
+    b: c = |a+5|;
+    c: qN = b;
+    c
+}

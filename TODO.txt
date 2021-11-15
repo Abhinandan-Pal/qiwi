@@ -61,3 +61,7 @@ a = c + b
 - id add(a:q7) and we give a q3 at call then increase it to q7
 
 - Take info from function to get better idea od persist kill- currently we are just choosing which function to use.
+
+- maybe we should allow  a: c = 5    b : q{a} = 0 to get |00000> 
+
+- Make persist kill mechanism only have the quantum data

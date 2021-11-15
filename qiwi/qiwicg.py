@@ -52,7 +52,7 @@ class QFunction:
         print(self.var_read_write)
 
     def var_can_kill(self,r_w,var:str,index:int):
-        print(f"XCGMVHB<J: {self.var_read_write} [{(r_w,index,var)}]")
+        #print(f"XCGMVHB<J: {self.var_read_write} [{(r_w,index,var)}]")
         for entry in self.var_read_write:
             r_w_v,index_v,var_v = entry
             if(r_w == 'R' and index == None):
@@ -185,12 +185,14 @@ class Context:
     functions: dict[(str,str), list(QFunction)]      # name,name_space to function
     used_qbits: int
     scope: dict[str, list[int]]
+    type_qnc: dict[str, bool]        #change to bool for optimization
     current_name_space: str
 
     def __init__(self) -> None:
         self.functions = {}
         self.used_qbits = 0
         self.scope = {}
+        self.type_qnc = {}
 
     def allocate_qbits(self, n: int) -> list[int]:
         bits = list(range(self.used_qbits, self.used_qbits + n))

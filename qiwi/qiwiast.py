@@ -7,6 +7,7 @@ class ASTNode:
     pass
 
 class ASTExp(ASTNode):
+    QnotC: bool
     def generate(self, _: qiwicg.Context, qf : qiwicg.QFunction):
         raise NotImplementedError
     def count_var_use(self):
@@ -14,12 +15,14 @@ class ASTExp(ASTNode):
 
 class ASTTypeQ(ASTNode):
     length: int
+    QnotC: bool
 
-    def __init__(self, length: int) -> None:
+    def __init__(self, QnotC:bool, length: int) -> None:
         self.length = length
+        self.QnotC = QnotC
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({self.length})"
+        return f"{self.__class__.__name__}({self.QnotC}{self.length})"
 
     def count_var_use(self):
         raise NotImplementedError
@@ -30,9 +33,13 @@ class ASTTypeQ(ASTNode):
 class ASTID(ASTExp):
     name: str
     persist_status: str
+    QnotC: bool
+    c_value: int
     def __init__(self, name: str) -> None:
         self.name = name
         self.persist_status = "UnKnown"
+        self.QnotC = None
+        self.c_value = None
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.name})"
@@ -43,18 +50,52 @@ class ASTID(ASTExp):
     def generate(self, context: qiwicg.Context, qf : qiwicg.QFunction) -> qiwicg.QFunction | qiwicg.QDynamicFunction | qiwicg.QBlock:
         if context.lookup_variable(self.name):
             block = qiwicg.QBlock()
+            self.QnotC = context.type_qnc[self.name]
             qf.var_list_remove(self.count_var_use()[0])
+            if(self.QnotC==False):
+                self.c_value = context.lookup_variable(self.name)[0]
+                int_block = ASTInt(self.c_value).generate(context,qf)
+                block.append(int_block)
+                block.output = int_block.output
+                return block
             block.append(create_temp_var(self,context,qf))
             block.output = context.lookup_variable(self.name)   
             replace_with_temp(self,context,qf)                  #SHOULD THIS CALL BE HERE?
-            return block
-            
-        return context.lookup_function(self.name,self.name_space)
+            return block   
+        elif context.lookup_function(self.name,self.name_space):
+            return context.lookup_function(self.name,self.name_space)
+        else:
+            raise(f"ID {self.name} used but not defined")
 
+class ASTlen(ASTExp):
+    id: Type(ASTID)
+    c_value:int
+
+    def __init__(self, id) -> None:
+        self.id = id
+        self.c_value = None
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self.id})"
+
+    def count_var_use(self):
+        return self.id.count_var_use()
+
+    def generate(self, context: qiwicg.Context, qf : qiwicg.QFunction):
+        block = qiwicg.QBlock()
+        len_var = self.id.generate(context,qf)
+        self.QnotC = False
+        self.c_value = len(len_var.output)
+        int_block = ASTInt(self.c_value).generate(context,qf)
+        block.append(int_block)
+        block.output = int_block.output
+        return block
+            
 class ASTIndexedID(ASTExp):
     name: str
     index: int
     persist_status: str
+    QnotC: bool
     def __init__(self, name: str, index: int) -> None:
         self.name = name
         self.index = index
@@ -68,6 +109,9 @@ class ASTIndexedID(ASTExp):
 
     def generate(self, context: qiwicg.Context, qf : qiwicg.QFunction) -> qiwicg.QBlock:
         block = qiwicg.QBlock()
+        self.QnotC = context.type_qnc(self.name)
+        if(QnotC==False):
+            raise RuntimeError("Only Quantum data is (qu)bit accessable")
         qf.var_list_remove(self.count_var_use()[0])
         block.append(create_temp_var(self,context,qf))
         block.output = [context.lookup_variable(self.name)[self.index]]
@@ -76,10 +120,12 @@ class ASTIndexedID(ASTExp):
         return block
 
 class ASTInt(ASTExp):
-    value: int
+    value: int                  #combine both the variables as one
+    c_value: int
 
     def __init__(self, value: int) -> None:
         self.value = value
+        self.c_value = value
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.value})"
@@ -258,28 +304,15 @@ class ASTIf_qm(ASTExp):
         val = []
         if(self.if_exp.count_var_use() != None):
             val += self.if_exp.count_var_use()
-        #val += [("W","if")]
         if(self.else_exp != None):    
             if(self.else_exp.count_var_use() != None):
                 val += self.else_exp.count_var_use()
-        #else:
-            #if(self.lhs.count_var_use() != None):
-                #val += self.lhs.count_var_use()
-        #val += [("W","else")]
         if(self.cond.count_var_use() != None):
             val += self.cond.count_var_use()
-        #val += [("R","if")]  
-        #val += [("R","else")]
         return val
     
     def generate(self, context: qiwicg.Context, qf : qiwicg.QFunction) -> qiwicg.QBlock:
         block = qiwicg.QBlock()
-        #blc,sta = kill_persist_fnc(context,qf,self.if_exp,self.else_exp)
-        #if(sta):
-            #return block
-        #block.append(blc)
-        
-                   #TODO for indexed LHS also, also test without else
         if_assign = self.if_exp.generate(context,qf)
         if_loc = if_assign.output
         block.append(if_assign)
@@ -313,30 +346,14 @@ class ASTIf_qm(ASTExp):
         
         for i in range(len(if_loc)):
             block.add(qiwicg.QGate('ccx', [if_loc[i], cond_loc[0], result_loc[i]]))
-            block.add(qiwicg.QGate('reset', [if_loc[i]]))
         block.add(qiwicg.QGate('x', [cond_loc[0]]))
         for i in range(len(else_loc)):
             block.add(qiwicg.QGate('ccx', [else_loc[i], cond_loc[0], result_loc[i]]))
-            block.add(qiwicg.QGate('reset', [else_loc[i]]))
         block.add(qiwicg.QGate('x', [cond_loc[0]]))
-        block.add(qiwicg.QGate('reset', [cond_loc[0]]))
 
         context.free_location(if_loc);
         context.free_location(else_loc);
         context.free_location(cond_loc);
-        '''context.free_variable(self.lhs.name);
-        if(self.lhs_index != None):
-            block.add(qiwicg.QGate('reset', [context.lookup_variable(self.lhs.name)[self.lhs.index]]))
-        else:
-            for loc in context.lookup_variable(self.lhs.name):
-                block.add(qiwicg.QGate('reset', [loc]))'''
-
-
-        #print(f"dtrfyghljnkm \t:{max(len(if_loc),len(else_loc))}->{result_loc}")
-        '''if(self.lhs_index != None):
-            context.set_var_index(self.lhs.name, result_loc[0], self.lhs_index)
-        else:
-            context.set_variable(self.lhs.name, result_loc)'''
 
         block.output = result_loc
         return block
@@ -349,11 +366,15 @@ class ASTExpBinary(ASTExp):
     operator: str
     left: Type[ASTExp]
     right: Type[ASTExp]
+    QnotC: bool
+    c_value:int
 
     def __init__(self, operator: str, left: Type[ASTExp], right: Type[ASTExp]) -> None:
         self.operator = operator
         self.left = left
         self.right = right
+        self.QnotC = None
+        self.c_value = None
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.operator}, {self.left}, {self.right})"
@@ -387,13 +408,30 @@ class ASTExpBinary(ASTExp):
         return result
 
     def generate(self, context: qiwicg.Context, qf : qiwicg.QFunction) -> qiwicg.QBlock:
-        block = qiwicg.QBlock()
 
         a = self.left.generate(context,qf)
-        #print(f'RESULT : {a}')
-        block.append(a)
-
         b = self.right.generate(context,qf)
+        block = qiwicg.QBlock()
+        if (type(self.left) == ASTInt) or (self.left.QnotC == False):
+            if (type(self.right)!=ASTInt) and (self.right.QnotC == True):
+                raise RuntimeError(f"Two both sides of an expr should be Quantum or classical {self}")
+            self.QnotC = False
+            if(self.operator=='+'):
+                self.c_value = self.left.c_value + self.right.c_value
+            if(self.operator=='-'):
+                self.c_value = self.left.c_value - self.right.c_value
+            if(self.operator=='*'):
+                self.c_value = self.left.c_value * self.right.c_value
+            if(self.operator=='/'):
+                self.c_value = int(self.left.c_value / self.right.c_value)
+            #print(f"self->{self}:-:{ASTInt(self.c_value).generate(context,qf)}")
+            int_block = ASTInt(self.c_value).generate(context,qf)
+            block.append(int_block)
+            block.output = int_block.output
+            return block
+        self.QnotC = True
+        block = qiwicg.QBlock()
+        block.append(a)
         block.append(b)
 
         if self.operator == '+':
@@ -485,11 +523,13 @@ class ASTFuncCall(ASTExp):
     name: ASTID
     name_space: str
     args: list[ASTExp]
+    QnotC:bool
 
     def __init__(self, name: ASTID, args: list[ASTExp],name_space: Optional[str] = "self") -> None:
         self.name = name
         self.args = args
         self.name_space = name_space
+        self.QnotC = True               #For now all functions are qunatumn
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.name_space}.{self.name}, {self.args})"
@@ -565,9 +605,16 @@ class ASTAssignment(ASTStatement):
 
     def generate(self, context: qiwicg.Context, qf : qiwicg.QFunction) -> qiwicg.QBlock:
         print(f"{self}")
-        rhs_block = qiwicg.QBlock()
         block = qiwicg.QBlock()
-        print(f"BEFORE: {context.scope}->{qf.var_read_write}")
+        if(self.type.QnotC == False):
+            rhs = self.rhs.generate(context,qf)
+            context.set_variable(self.lhs.name, [self.rhs.c_value])
+            context.type_qnc[self.lhs.name]=False
+            return block
+
+        rhs_block = qiwicg.QBlock()
+        
+        print(f"BEFORE: {context.scope}:{context.type_qnc}->{qf.var_read_write}")
         flag = False
 
         qf_copy = copy.deepcopy(qf)
@@ -602,7 +649,7 @@ class ASTAssignment(ASTStatement):
         elif isinstance(rhs, qiwicg.QBlock):
             location = rhs.output
             rhs_block.append(rhs)
-            if isinstance(self.type, ASTTypeQ):
+            if isinstance(self.type, ASTTypeQ) and (self.type.length!=None):
                 diff = self.type.length - len(location)
                 if diff < 0:
                     raise RuntimeError(f"Type {self.type} not large enough to store {len(location)} qubits")
@@ -622,7 +669,9 @@ class ASTAssignment(ASTStatement):
             context.set_var_index(self.lhs.name, location[0], self.index)
         else:
             context.set_variable(self.lhs.name, location)
+        context.type_qnc[self.lhs.name] = True
         block.output = location
+        print(f"END: {context.scope}:{context.type_qnc}->{qf.var_read_write}")
         return block
 
 
@@ -656,7 +705,7 @@ def create_temp_var(id:ASTID,context: qiwicg.Context,qf : qiwicg.QFunction):
             context.set_variable((var_name+":temp"), var_copy_loc)
             print(f"\tPersist: {var_name}")
             id.persist_status = "PERSIST"
-    print(f"MIDDLE: {context.scope}->{qf.var_read_write}")
+    print(f"MIDDLE: {context.scope}:{context.type_qnc}->{qf.var_read_write}")
     return block
 
 

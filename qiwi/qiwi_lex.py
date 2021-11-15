@@ -8,7 +8,7 @@ class QiwiLexer(Lexer):
                IF_QC, IF_QM ,AND, OR, NAND, NOR, XOR, XNOR, PERSIST }
 
 
-    literals = { '~','(', ')', '{', '}', '[',']' ,';' , '-' , '+' , '*' , '/' , '=' , ',' , '.', ':'}
+    literals = { '|','~','(', ')', '{', '}', '[',']' ,';' , '-' , '+' , '*' , '/' , '=' , ',' , '.', ':'}
 
     # String containing ignored characters
     ignore = ' \t'

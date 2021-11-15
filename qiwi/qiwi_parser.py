@@ -64,6 +64,8 @@ class QiwiParser(Parser):
 #------
 	@_('ID ":" ID')
 	def argdecl(self, p):
+		if p[2] == 'c': 
+			return (qiwiast.ASTID(p[0]), qiwiast.ASTTypeQ(False,num),False)
 		if p[2][0] != 'q':
 			raise RuntimeError(f"Unknown type {p[2]}")
 
@@ -71,10 +73,12 @@ class QiwiParser(Parser):
 			num = None
 		else:
 			num = int(p[2][1:])
-		return (qiwiast.ASTID(p[0]), qiwiast.ASTTypeQ(num),False)
+		return (qiwiast.ASTID(p[0]), qiwiast.ASTTypeQ(True,num),False)
 
 	@_('PERSIST ID ":" ID')
 	def argdecl(self, p):
+		if p[3] == 'c': 
+			raise RuntimeError(f"PERSIST cant be used on classical data")
 		if p[3][0] != 'q':
 			raise RuntimeError(f"Unknown type {p[3]}")
 
@@ -82,7 +86,7 @@ class QiwiParser(Parser):
 			num = None
 		else:
 			num = int(p[3][1:])
-		return (qiwiast.ASTID(p[1]), qiwiast.ASTTypeQ(num), True)
+		return (qiwiast.ASTID(p[1]), qiwiast.ASTTypeQ(True,num), True)
 #------
 	@_('expr')						#basically return statement
 	def statements(self, p):
@@ -112,11 +116,16 @@ class QiwiParser(Parser):
 	
 	@_('ID ":" ID "=" expr')
 	def assignment(self, p):
+		if p[2] == 'c': 
+			return qiwiast.ASTAssignment(qiwiast.ASTID(p[0]), p.expr , type=qiwiast.ASTTypeQ(False,None))
 		if p[2][0] != 'q':
 			raise RuntimeError(f"Unknown type {p[2]}")
 
-		num = int(p[2][1:])
-		return qiwiast.ASTAssignment(qiwiast.ASTID(p[0]), p.expr , type=qiwiast.ASTTypeQ(num))
+		if (p[2][1:] == 'N'):
+			num = None
+		else:
+			num = int(p[2][1:])
+		return qiwiast.ASTAssignment(qiwiast.ASTID(p[0]), p.expr , type=qiwiast.ASTTypeQ(True,num))
 #------
 	@_('expr "+" expr',
    'expr "-" expr',
@@ -128,6 +137,10 @@ class QiwiParser(Parser):
 	@_('ID')
 	def expr(self, p):
 		return qiwiast.ASTID(p.ID)
+
+	@_(' "|" expr "|" ')
+	def expr(self,p):
+		return qiwiast.ASTlen(p.expr)
 
 	@_('"(" expr ")"')
 	def expr(self, p):
@@ -169,11 +182,11 @@ class QiwiParser(Parser):
 	def if_qc_state(self,p):
 		return qiwiast.ASTIf_qc(p.if_qc_expr, p.expr)
 
-	@_('expr')
+	@_('bexpr')
 	def if_qc_expr(self,p):
 		return (p.expr,'SINGLE',None)
 
-	@_('expr op_qc expr')
+	@_('bexpr op_qc bexpr')
 	def if_qc_expr(self,p):
 		return (p[0],p[1],p[2])
 
@@ -181,6 +194,22 @@ class QiwiParser(Parser):
    'NAND','XOR','XNOR')
 	def op_qc(self, p):
 		return p[0]
+#-----
+	@_('expr EQ expr',
+   'expr LE expr',
+   'expr LT expr',
+   'expr GE expr',
+   'expr GT expr',
+   'expr NE expr')
+	def bexpr(self, p):
+		return qiwiast.ASTRelational(p[1], p[0], p[2])
+	'expr'
+	def bexpr(self,p):
+		return p.expr
+
+	@_('IF_QC "(" if_qc_expr ")" "{" statements "}"')
+	def if_c_state(self,p):
+		return qiwiast.ASTIf_qc(p.if_qc_expr, p.expr)
 #-----
 	@_('if_qm_expr')
 	def expr(self,p):
