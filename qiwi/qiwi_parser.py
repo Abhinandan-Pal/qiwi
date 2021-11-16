@@ -178,13 +178,25 @@ class QiwiParser(Parser):
 	def arg(self, p):
 		return p.expr
 #-----
+	@_('expr EQ expr',
+   'expr LE expr',
+   'expr LT expr',
+   'expr GE expr',
+   'expr GT expr',
+   'expr NE expr')
+	def bexpr(self, p):
+		return qiwiast.ASTRelational(p[1], p[0], p[2])
+	@_('expr')
+	def bexpr(self,p):
+		return p.expr
+#-----
 	@_('IF_QC "(" if_qc_expr ")" "{" expr "}"')
 	def if_qc_state(self,p):
 		return qiwiast.ASTIf_qc(p.if_qc_expr, p.expr)
 
 	@_('bexpr')
 	def if_qc_expr(self,p):
-		return (p.expr,'SINGLE',None)
+		return (p.bexpr,'SINGLE',None)
 
 	@_('bexpr op_qc bexpr')
 	def if_qc_expr(self,p):
@@ -195,21 +207,19 @@ class QiwiParser(Parser):
 	def op_qc(self, p):
 		return p[0]
 #-----
-	@_('expr EQ expr',
-   'expr LE expr',
-   'expr LT expr',
-   'expr GE expr',
-   'expr GT expr',
-   'expr NE expr')
-	def bexpr(self, p):
-		return qiwiast.ASTRelational(p[1], p[0], p[2])
-	'expr'
-	def bexpr(self,p):
-		return p.expr
+	@_('if_c')
+	def statement(self,p):
+		a,b = p.if_c
+		return qiwiast.ASTIf_c(a, b, None)
+	
+	@_('if_c ELSE "{" statements "}"')
+	def statement(self,p):
+		a,b = p.if_c
+		return qiwiast.ASTIf_c( a, b, p.statements)		
 
-	@_('IF_QC "(" if_qc_expr ")" "{" statements "}"')
-	def if_c_state(self,p):
-		return qiwiast.ASTIf_qc(p.if_qc_expr, p.expr)
+	@_('IF_C "(" bexpr ")" "{" statements "}"')
+	def if_c(self,p):
+		return (p.bexpr,p.statements)
 #-----
 	@_('if_qm_expr')
 	def expr(self,p):
@@ -225,6 +235,15 @@ class QiwiParser(Parser):
 	def if_qm_expr(self,p):
 		return (p.expr0,p.expr1)
 #-----
+	@_('for_c')
+	def statement(self,p):
+		return p.for_c
+
+	@_('FOR ID IN "[" expr ":" expr ":" expr  "]" "{" statements "}"')
+	def for_c(self,p):
+		return qiwiast.ASTFor_c(qiwiast.ASTID(p.ID),p.expr0,p.expr1,p.expr2,p.statements)
+#-----
+
 	#@_('QINT "[" NUM "]"')
 	#def type(self, p):
 		#return qiwiast.ASTTypeQ(p.num) 

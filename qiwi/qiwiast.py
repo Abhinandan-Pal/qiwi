@@ -109,8 +109,8 @@ class ASTIndexedID(ASTExp):
 
     def generate(self, context: qiwicg.Context, qf : qiwicg.QFunction) -> qiwicg.QBlock:
         block = qiwicg.QBlock()
-        self.QnotC = context.type_qnc(self.name)
-        if(QnotC==False):
+        self.QnotC = context.type_qnc[self.name]
+        if(self.QnotC==False):
             raise RuntimeError("Only Quantum data is (qu)bit accessable")
         qf.var_list_remove(self.count_var_use()[0])
         block.append(create_temp_var(self,context,qf))
@@ -152,6 +152,112 @@ class ASTStatement(ASTNode):
 
     def count_var_use(self):
         raise NotImplementedError
+
+class ASTFor_c(ASTExp):
+    iter_id: Type[ASTID]
+    start: Type[ASTExp]
+    end: Type[ASTExp]
+    step: Type[ASTExp]
+    statements: Type[list(ASTStatement)]
+
+    def __init__(self, iter_id,start,end,step,statements):
+        self.iter_id = iter_id
+        self.start = start
+        self.end = end 
+        self.step = step
+        self.statements = statements
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self.iter_id},{self.start},{self.end},{self.step},{self.statements})"
+
+    def count_var_use(self):
+        val = []
+        if(self.start.count_var_use() != None):
+            val += self.start.count_var_use()
+        if(self.end.count_var_use() != None):
+            val += self.end.count_var_use()
+        if(self.step.count_var_use() != None):
+            val += self.step.count_var_use()
+        val += [('W',None,self.iter_id.name)]
+        for statement in self.statements:
+            if(statement.count_var_use() != None):
+                val += statement.count_var_use()
+
+        return val 
+
+    def generate(self, context: qiwicg.Context, qf : qiwicg.QFunction) -> qiwicg.QBlock:
+        block = qiwicg.QBlock()
+        #block.append(self.iter_id.generate(context,qf))    #dont exceute this as generate is for read
+        block.append(self.start.generate(context,qf))
+        block.append(self.end.generate(context,qf))
+        block.append(self.step.generate(context,qf))
+        context.type_qnc[self.iter_id.name] = False
+        loop_rw = []
+        qf.var_list_remove(('W',None,self.iter_id.name))
+        for statement in self.statements:
+            if(statement.count_var_use() != None):
+                loop_rw += statement.count_var_use()
+        
+        for i in range(self.start.c_value,self.end.c_value-1,self.step.c_value):
+            qf.var_read_write = loop_rw + qf.var_read_write
+
+        for i in range(self.start.c_value,self.end.c_value,self.step.c_value):
+            context.set_variable(self.iter_id.name,i)
+            for statement in self.statements:
+                statement = statement.generate(context,qf)
+                block.append(statement)
+        return block
+
+
+class ASTIf_c(ASTExp):
+    cond: Type[ASTExp]
+    if_statements: Type[list(ASTStatement)]
+    else_statements: Type[list(ASTStatement)]
+
+    def __init__(self, cond, if_statements,else_statements):
+        self.cond = cond
+        self.if_statements = if_statements
+        self.else_statements = else_statements
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self.cond},{self.if_statements},{self.else_statements})"
+
+    def count_var_use(self):
+        val = []
+        if(self.cond.count_var_use() != None):
+            val += self.cond.count_var_use()
+        for if_statement in self.if_statements:
+            if(if_statement.count_var_use() != None):
+                val += if_statement.count_var_use()
+
+        for else_statement in self.else_statements:
+            if(else_statement.count_var_use() != None):
+                val += else_statement.count_var_use()
+        return val 
+    def generate(self, context: qiwicg.Context, qf : qiwicg.QFunction) -> qiwicg.QBlock:
+        block = qiwicg.QBlock()
+        cond = self.cond.generate(context,qf)
+        block.append(cond)
+        print(f"AZSDXFCGVHBJNK: \t\t {self.cond.c_value}")
+        if(self.cond.c_value):
+            for statement in self.if_statements:
+                statement = statement.generate(context,qf)
+                block.append(statement)
+            for else_statement in self.else_statements:
+                if(else_statement.count_var_use() != None):
+                    for val in else_statement.count_var_use():
+                        qf.var_list_remove(val)
+        else:
+            for if_statement in self.if_statements:
+                if(if_statement.count_var_use() != None):
+                    for val in if_statement.count_var_use():
+                        qf.var_list_remove(val)
+            for statement in self.else_statements:
+                statement = statement.generate(context,qf)
+                block.append(statement)
+        return block
+
+
 class ASTIf_qc(ASTExp):
     left_cond: Type[ASTIndexedID]
     right_cond: Type[ASTIndexedID]
@@ -359,6 +465,64 @@ class ASTIf_qm(ASTExp):
         return block
 
 
+
+
+class ASTRelational(ASTExp):
+    operator: str
+    left: Type[ASTExp]
+    right: Type[ASTExp]
+    QnotC: bool
+    c_value:int
+
+    def __init__(self, operator: str, left: Type[ASTExp], right: Type[ASTExp]) -> None:
+        self.operator = operator
+        self.left = left
+        self.right = right
+        self.QnotC = None
+        self.c_value = None
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self.operator}, {self.left}, {self.right})"
+    
+    def count_var_use(self):
+        result = []
+        if(self.left.count_var_use() != None ):
+            result += self.left.count_var_use()
+        if(self.right.count_var_use() != None): 
+            result += self.right.count_var_use()
+        return result
+
+    def generate(self, context: qiwicg.Context, qf : qiwicg.QFunction) -> qiwicg.QBlock:
+
+        a = self.left.generate(context,qf)
+        b = self.right.generate(context,qf)
+        block = qiwicg.QBlock()
+        if (type(self.left) == ASTInt) or (self.left.QnotC == False):
+            if (type(self.right)!=ASTInt) and (self.right.QnotC == True):
+                raise RuntimeError(f"Two both sides of an expr should be Quantum or classical {self}")
+            self.QnotC = False
+            if(self.operator=='>'):
+                self.c_value = int(self.left.c_value > self.right.c_value)
+            if(self.operator=='<'):
+                self.c_value = int(self.left.c_value < self.right.c_value)
+            if(self.operator=='<='):
+                self.c_value = int(self.left.c_value <= self.right.c_value)
+            if(self.operator=='>='):
+                self.c_value = int(self.left.c_value >= self.right.c_value)
+            if(self.operator=='=='):
+                self.c_value = int(self.left.c_value == self.right.c_value)
+            if(self.operator=='!='):
+                self.c_value = int(self.left.c_value != self.right.c_value)
+
+            int_block = ASTInt(self.c_value).generate(context,qf)
+            block.append(int_block)
+            block.output = int_block.output
+            return block
+        self.QnotC = True
+        block = qiwicg.QBlock()
+        block.append(a)
+        block.append(b)
+        raise NotImplementedError
 
 
 
@@ -606,11 +770,14 @@ class ASTAssignment(ASTStatement):
     def generate(self, context: qiwicg.Context, qf : qiwicg.QFunction) -> qiwicg.QBlock:
         print(f"{self}")
         block = qiwicg.QBlock()
-        if(self.type.QnotC == False):
-            rhs = self.rhs.generate(context,qf)
-            context.set_variable(self.lhs.name, [self.rhs.c_value])
-            context.type_qnc[self.lhs.name]=False
-            return block
+
+        if(self.type != None):
+            if(self.type.QnotC == False):
+                rhs = self.rhs.generate(context,qf)
+                context.set_variable(self.lhs.name, [self.rhs.c_value])
+                context.type_qnc[self.lhs.name]=False
+                qf.var_list_remove(("W",None,self.lhs.name))
+                return block
 
         rhs_block = qiwicg.QBlock()
         
@@ -662,6 +829,10 @@ class ASTAssignment(ASTStatement):
         else:
             qf.var_list_remove(("W",self.index,self.lhs.name))    #a particular index of name is rewritten
 
+        if(type(self.rhs)!= ASTInt and self.rhs.QnotC == False):
+            context.set_variable(self.lhs.name, [self.rhs.c_value])
+            context.type_qnc[self.lhs.name]=False
+            return block
         block.append(rhs_block)
         if(self.index != None):
             if(len(location)!= 1):

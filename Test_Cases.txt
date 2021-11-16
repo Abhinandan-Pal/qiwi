@@ -2,18 +2,6 @@ TEST ALL IF_QC STATEMENTS
 
 fn main() {
     a: q3 = 0;
-    if_qc(a[2]) {H(a[0])};
-    if_qc(a[2] and a[1]){X(a[0])};
-    if_qc (a[2] or a[1]){X(a[0])};
-    if_qc(a[2] nand a[1]){X(a[0])};
-    if_qc(a[2] nor a[1]){X(a[0])};
-    if_qc(a[2] xor a[1]){X(a[0])};
-    if_qc(a[2] xnor a[1]){X(a[0])};
-    a
-}
-
-fn main() {
-    a: q3 = 0;
     b: q1 = 1;
     if_qc(b) {H(a[2])};
     if_qc(a[0] and a[1]){X(b)};

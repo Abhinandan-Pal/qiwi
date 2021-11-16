@@ -3,9 +3,9 @@
 from sly import Lexer
 
 class QiwiLexer(Lexer):
-    tokens = { NUM, ID, WHILE, IF, ELSE, PRINT, FN,
+    tokens = { NUM, ID, WHILE, IF, ELSE, PRINT, FN, FOR,
                EQ, LT, LE, GT, GE, NE, USE, AS, 
-               IF_QC, IF_QM ,AND, OR, NAND, NOR, XOR, XNOR, PERSIST }
+               IF_QC, IF_QM ,AND, OR, NAND, NOR, XOR, XNOR,IF_C, PERSIST, IN }
 
 
     literals = { '|','~','(', ')', '{', '}', '[',']' ,';' , '-' , '+' , '*' , '/' , '=' , ',' , '.', ':'}
@@ -32,11 +32,13 @@ class QiwiLexer(Lexer):
     ID['if'] = IF
     ID['else'] = ELSE
     ID['while'] = WHILE
+    ID['for'] = FOR
     ID['print'] = PRINT
     ID['fn']    = FN
     ID['use']  = USE
     ID['as']  = AS
     ID['if_qc']  = IF_QC
+    ID['if_c']  = IF_C
     ID['if_qm']  = IF_QM
     ID['or'] = OR
     ID['and'] = AND
@@ -45,6 +47,7 @@ class QiwiLexer(Lexer):
     ID['xor'] = XOR
     ID['xnor'] = XNOR
     ID['persist'] = PERSIST
+    ID['in'] = IN
 
 
     ignore_comment = r'//.*'

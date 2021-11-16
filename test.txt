@@ -1,6 +1,9 @@
 fn main() {
-    a: qN = 31;
-    b: c = |a+5|;
-    c: qN = b;
-    c
+    a: c = 5;
+    b: q3 = 7;
+    for i in [0:a:1] {
+        b = H(b);
+        b
+    };
+    b
 }

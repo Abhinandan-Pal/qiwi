@@ -65,3 +65,7 @@ a = c + b
 - maybe we should allow  a: c = 5    b : q{a} = 0 to get |00000> 
 
 - Make persist kill mechanism only have the quantum data
+
+- Do Persist-kill inside functions also maybe like the way of doing a new context
+
+- ["w",None,'a'] add something for classical in middle
