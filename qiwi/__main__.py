@@ -88,8 +88,9 @@ mainargs = list(map(
         range(context.used_qbits, context.used_qbits + x[1].length)),
     mainfunc.definition.args))
 
-qasmcode = context.functions[('main', 'self')][0].generate(
-    context, []).generate_qasm(context)
+qasmcode = context.functions[('main', 'self')][0].generate(context, [])
+output_lines = qasmcode.output
+qasmcode = qasmcode.generate_qasm(context)
 
 if args.optimize:
     zxcircuit = pyzx.Circuit.from_qasm(qasmcode)
@@ -104,8 +105,11 @@ if args.draw:
     qiskitcirc = qiskit.circuit.QuantumCircuit.from_qasm_str(qasmcode)
     print(qiskitcirc)
 
+output_text = "Output lines: {}".format(', '.join(map(str, output_lines)))
 if args.outfile:
-    open(args.outfile, 'w').write(qasmcode)
+    with open(args.outfile, 'w') as outfile:
+        outfile.write(qasmcode)
+        outfile.write('\n// ' + output_text + '\n')
 else:
     print(qasmcode)
-
+    print(output_text)
