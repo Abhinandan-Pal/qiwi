@@ -35,7 +35,7 @@ class QiwiParser(Parser):
 
     @_('USE ID AS ID ";"')
     def impt(self, p):
-        return [((p[1]+".txt"), p[3])]
+        return [((p[1]+".qiwi"), p[3])]
 
 # ------
     @_('empty')
