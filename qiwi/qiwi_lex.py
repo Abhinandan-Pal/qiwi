@@ -4,7 +4,7 @@ from sly import Lexer
 
 
 class QiwiLexer(Lexer):
-    tokens = {NUM, ID, IF, ELSE, FN, FOR,
+    tokens = {NUM, ID, ELSE, FN, FOR,
               EQ, LT, LE, GT, GE, NE, USE, AS,
               IF_QC, IF_QM, AND, OR, NAND, NOR, XOR, XNOR, IF_C, PERSIST, IN}
 
@@ -29,7 +29,6 @@ class QiwiLexer(Lexer):
 
     # Identifiers and keywords
     ID = r'[a-zA-Z_][a-zA-Z0-9_]*'
-    ID['if'] = IF
     ID['else'] = ELSE
     ID['for'] = FOR
     ID['fn'] = FN
