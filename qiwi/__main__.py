@@ -70,7 +70,8 @@ used_files.add(args.srcfile)
 qiwicg.generate(parsed_result, context)
 
 while (len(use_files) != 0):
-    file, name_space = use_files.pop()
+    name_space = use_files.pop()
+    file = name_space + ".qiwi"
     if file not in used_files:
         context.current_name_space = name_space
         use_source = open(file).read()
@@ -87,7 +88,7 @@ mainargs = list(map(
     lambda x: list(
         range(context.used_qbits, context.used_qbits + x[1].length)),
     mainfunc.definition.args))
-
+context.current_name_space = 'self'
 qasmcode = context.functions[('main', 'self')][0].generate(context, [])
 output_lines = qasmcode.output
 qasmcode = qasmcode.generate_qasm(context)

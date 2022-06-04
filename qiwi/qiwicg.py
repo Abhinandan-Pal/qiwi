@@ -54,7 +54,7 @@ class QFunction:
         __main__.log(self.var_read_write)
 
     def var_can_kill(self, r_w, var: str, index: int):
-        #__main__.log(f"XCGMVHB<J: {self.var_read_write} [{(r_w,index,var)}]")
+        #__main__.log(f" {self.var_read_write} [{(r_w,index,var)}]")
         for entry in self.var_read_write:
             r_w_v, index_v, var_v = entry
             if(r_w == 'R' and index == None):
@@ -87,12 +87,16 @@ class QFunction:
                     return False
         return True
 
-    def var_list_remove(self, element: (str, str)):
+    def var_list_remove(self, element):
         self.var_read_write.remove(element)
 
-    def generate(self, context: Context, args: list[list[int]]) -> QBlock:
+    def generate(self, context: Context, args: list[list[int]], name_space = "self") -> QBlock:
         outerscope = context.scope
+        outerName_space = context.current_name_space
+        outerTypeQnotC = context.type_qnc
         context.scope = {}
+        context.type_qnc = {}
+        context.current_name_space = name_space
 
         if len(self.definition.args) != len(args):
             raise RuntimeError(
@@ -106,6 +110,8 @@ class QFunction:
                 raise RuntimeError(
                     f"Argument size mismatch for {argdef[0].name} in function {self.definition.name}")
             context.set_variable(argdef[0].name, args[n])
+            context.addTypeQnotC(argdef[0].name, argdef[1].QnotC)
+            self.var_read_write += [('R',None,argdef[0].name)]
 
         block = QBlock()
         for statement in self.definition.body[:-1]:
@@ -115,7 +121,8 @@ class QFunction:
         block.output = last_exp_block.output
 
         context.scope = outerscope
-
+        context.type_qnc = outerTypeQnotC
+        context.current_name_space = outerName_space
         return block
 
 
@@ -265,14 +272,21 @@ class Context:
         pass
 
     def delete_variable(self, name: str) -> None:
-        del self.scope[name]
+        del self.scope[name] 
 
-    def lookup_variable(self, name: str) -> list[int]:
+    def lookup_variable(self, name: str ) -> list[int]:
         if self.scope.get(name):
             return self.scope[name]
 
-        raise RuntimeError(f"Cannot find variable named: {name}")
+        raise RuntimeError(f"Cannot find variable named: {name} in {self.current_name_space}")
 
+    def addTypeQnotC(self, name: str, val: bool) -> None:
+        self.type_qnc[name] = val
+
+    def lookupTypeQnotC(self,name):
+        if not self.type_qnc.get(name) == None:
+            return self.type_qnc[name]
+        raise RuntimeError(f"Cannot find variable named: \'{name}\' in \'{self.current_name_space}\'")
 
 def generate(ast: list[qiwiast.ASTNode], context: Context):
     for node in ast:

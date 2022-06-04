@@ -1,0 +1,4 @@
+use def as j;
+fn add(lhs: qN, rhs: qN) {
+    (lhs + rhs)
+}

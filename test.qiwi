@@ -1,0 +1,6 @@
+fn main() {
+    a: qN = 3;
+    b: qN = 5;
+    for b times do {X(a)};
+    a
+}

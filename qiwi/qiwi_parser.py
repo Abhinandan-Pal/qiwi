@@ -33,9 +33,9 @@ class QiwiParser(Parser):
     def imports(self, p):
         return []
 
-    @_('USE ID AS ID ";"')
+    @_('USE ID ";"')
     def impt(self, p):
-        return [((p[1]+".qiwi"), p[3])]
+        return [(p[1])]
 
 # ------
     @_('empty')
@@ -99,6 +99,10 @@ class QiwiParser(Parser):
     @_('statement ";" statements')
     def statements(self, p):
         return [p[0]] + p[2]
+
+    @_('statement ";"')
+    def statements(self, p):
+        return [p[0]]
 # ------
 
     @_('assignment')
@@ -255,6 +259,17 @@ class QiwiParser(Parser):
     @_('FOR ID IN "[" expr ":" expr ":" expr  "]" "{" statements "}"')
     def for_c(self, p):
         return qiwiast.ASTFor_c(qiwiast.ASTID(p.ID), p.expr0, p.expr1, p.expr2, p.statements)
+
+# -----
+
+    @_('for_qc')
+    def statement(self, p):
+        return p.for_qc
+
+    @_('FOR expr TIMES DO "{" expr "}"')
+    def for_qc(self, p):
+        return qiwiast.ASTFor_qc(p.expr0, p.expr1)
+
 # -----
 
     def error(self, p):

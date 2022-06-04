@@ -2,12 +2,15 @@ TEST ALL IF_QC STATEMENTS
 
 fn main() {
     a: q3 = 0;
-    b: q1 = 1;
-    if_qc(b) {H(a[2])};
-    if_qc(a[0] and a[1]){X(b)};
+    if_qc(a[2]) {H(a[0])};
+    if_qc(a[2] and a[1]){X(a[0])};
+    if_qc (a[2] or a[1]){X(a[0])};
+    if_qc(a[2] nand a[1]){X(a[0])};
+    if_qc(a[2] nor a[1]){X(a[0])};
+    if_qc(a[2] xor a[1]){X(a[0])};
+    if_qc(a[2] xnor a[1]){X(a[0])};
     a
 }
-
 TEST Persist-kill mechanism
 
 fn main() {
@@ -151,4 +154,49 @@ fn main() {
     b: c = |a+5|;
     c: qN = b;
     c
+}
+
+IMPORT
+use abc ;
+use def ;
+fn main() {
+    a: qN = 0;
+    b: qN = 1;
+    d.sub(a.add(a,b),a.add(b,a))
+}
+
+abc.txt
+use def ;
+fn add(lhs: qN, rhs: qN) {
+    (lhs + rhs)
+}
+
+def.txt
+use abc ;
+fn sub(lhs: qN, rhs: qN) {
+    (lhs - rhs)
+}
+
+
+
+
+FOR Classical
+
+fn main() {
+    a: qN = 0;
+    for b in [0 : 5 : 1]
+    {
+    a = X(a);
+    };
+    a
+}
+
+
+FOR Control
+
+fn main() {
+    a: qN = 3;
+    b: qN = 5;
+    for b times do {X(a)};
+    a
 }

@@ -60,7 +60,7 @@ class ASTID(ASTExp):
     def generate(self, context: qiwicg.Context, qf: qiwicg.QFunction) -> qiwicg.QFunction | qiwicg.QDynamicFunction | qiwicg.QBlock:
         if context.lookup_variable(self.name):
             block = qiwicg.QBlock()
-            self.QnotC = context.type_qnc[self.name]
+            self.QnotC = context.lookupTypeQnotC(self.name)
             qf.var_list_remove(self.count_var_use()[0])
             if not self.QnotC:
                 self.c_value = context.lookup_variable(self.name)[0]
@@ -122,7 +122,7 @@ class ASTIndexedID(ASTExp):
 
     def generate(self, context: qiwicg.Context, qf: qiwicg.QFunction) -> qiwicg.QBlock:
         block = qiwicg.QBlock()
-        self.QnotC = context.type_qnc[self.name]
+        self.QnotC = context.lookupTypeQnotC(self.name)
         if not self.QnotC:
             raise RuntimeError("Only Quantum data is (qu)bit accessable")
         qf.var_list_remove(self.count_var_use()[0])
@@ -206,10 +206,10 @@ class ASTFor_c(ASTExp):
     def generate(self, context: qiwicg.Context, qf: qiwicg.QFunction) -> qiwicg.QBlock:
         block = qiwicg.QBlock()
         # block.append(self.iter_id.generate(context,qf))    #dont exceute this as generate is for read
-        block.append(self.start.generate(context, qf))
-        block.append(self.end.generate(context, qf))
-        block.append(self.step.generate(context, qf))
-        context.type_qnc[self.iter_id.name] = False
+        self.start.generate(context, qf)
+        self.end.generate(context, qf)
+        self.step.generate(context, qf)
+        context.addTypeQnotC(self.iter_id.name, False)
         loop_rw = []
         qf.var_list_remove(('W', None, self.iter_id.name))
         for statement in self.statements:
@@ -226,6 +226,63 @@ class ASTFor_c(ASTExp):
                 block.append(statement)
         return block
 
+class ASTFor_qc(ASTExp):
+    def __init__(self, iterVarExp, target_func):
+        self.iterVarExp = iterVarExp
+        self.target_func = target_func
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self.iterVarExp},{self.target_func})"
+
+    def count_var_use(self):
+        val = []
+        t_func_args = self.target_func.args
+        if self.target_func.count_var_use() is not None:
+            val += self.target_func.count_var_use()
+        for arg in t_func_args:
+            if (type(arg) == ASTIndexedID):
+                val += [("W", arg.index, arg.name)]
+            elif(type(arg) == ASTID):
+                val += [("W", None, arg.name)]
+        if self.iterVarExp.count_var_use() is not None:
+            val += self.iterVarExp.count_var_use()
+        return val
+
+    def generate(self, context: qiwicg.Context, qf: qiwicg.QFunction) -> qiwicg.QBlock:
+        block = qiwicg.QBlock()
+        # if(self.target_func != ASTFuncCall):                 #FIX THIS ERROR ALERT
+        # raise RuntimeError("Target of if_qc must be a Gate on a qubit")
+        t_func_name = self.target_func.name
+        t_func_args = self.target_func.args
+
+        # Add cool syntax error detection stuff
+        func = context.lookup_function(
+            t_func_name.name, self.target_func.name_space)
+        iterVarExp = self.iterVarExp.generate(context, qf)
+
+        argloc = []
+        for arg in t_func_args:
+            argblock = arg.generate(context, qf)
+            if(type(argblock) == int):
+                raise RuntimeError("Only variables can be placed in function")
+            block.append(argblock)
+            argloc.append(argblock.output)
+        t_func_name = t_func_name.name.lower()
+
+        block.append(iterVarExp)
+
+        if len(argloc) != 1:
+            raise RuntimeError(
+                f"Target expects 1 arguments, {len(argloc)} provided")
+       
+        cgate = 'c'+t_func_name
+        for term in range(len(iterVarExp.output)):
+            for i in range(2**term):
+                for argline in argloc[0]:
+                    block.add(qiwicg.QGate(
+                        cgate, [iterVarExp.output[term], argline]))
+
+        return block
 
 class ASTIf_c(ASTExp):
     cond: ASTExp
@@ -257,7 +314,7 @@ class ASTIf_c(ASTExp):
         block = qiwicg.QBlock()
         cond = self.cond.generate(context, qf)
         block.append(cond)
-        __main__.log(f"AZSDXFCGVHBJNK: \t\t {self.cond.c_value}")
+        __main__.log(f"IF_C: \t\t {self.cond.c_value}")
         if(self.cond.c_value):
             for statement in self.if_statements:
                 statement = statement.generate(context, qf)
@@ -426,11 +483,13 @@ class ASTIf_qm(ASTExp):
     lhs: ASTExp
     if_exp: ASTExp
     else_exp: ASTExp
+    QnotC: Optional[bool]
 
     def __init__(self, cond, if_exp, else_exp: Optional[ASTExp] = None):
         self.cond = cond
         self.if_exp = if_exp
         self.else_exp = else_exp
+        self.QnotC = True
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.cond},{self.if_exp},{self.else_exp})"
@@ -766,11 +825,10 @@ class ASTFuncCall(ASTExp):
                     raise RuntimeError("Debug Line: Should never occur")
                 persist_info.append(
                     ((arg.persist_status == "PERSIST"), len(argblock.output)))
-
         func = context.lookup_function(
             self.name.name, persist_info, self.name_space)
         if isinstance(func, qiwicg.QFunction):
-            body = func.generate(context, argloc)
+            body = func.generate(context, argloc,self.name_space)
         elif isinstance(func, qiwicg.QDynamicFunction):
             body = func.fn(argloc)
         else:
@@ -821,7 +879,7 @@ class ASTAssignment(ASTStatement):
             if(self.type.QnotC == False):
                 rhs = self.rhs.generate(context, qf)
                 context.set_variable(self.lhs.name, [self.rhs.c_value])
-                context.type_qnc[self.lhs.name] = False
+                context.addTypeQnotC(self.lhs.name, False)
                 qf.var_list_remove(("W", None, self.lhs.name))
                 return block
 
@@ -880,7 +938,7 @@ class ASTAssignment(ASTStatement):
 
         if(type(self.rhs) != ASTInt and self.rhs.QnotC == False):
             context.set_variable(self.lhs.name, [self.rhs.c_value])
-            context.type_qnc[self.lhs.name] = False
+            context.addTypeQnotC(self.lhs.name, False)
             return block
         block.append(rhs_block)
         if self.index is not None:
@@ -890,7 +948,7 @@ class ASTAssignment(ASTStatement):
             context.set_var_index(self.lhs.name, location[0], self.index)
         else:
             context.set_variable(self.lhs.name, location)
-        context.type_qnc[self.lhs.name] = True
+        context.addTypeQnotC(self.lhs.name, True)
         block.output = location
         __main__.log(f"END: {context.scope}:{context.type_qnc}->{qf.var_read_write}")
         return block
