@@ -204,7 +204,7 @@ class QiwiParser(Parser):
         return p.expr
 # -----
 
-    @_('IF_QC "(" if_qc_expr ")" "{" expr "}"')
+    @_('IF CTRL "(" if_qc_expr ")" "{" expr "}"')
     def if_qc_state(self, p):
         return qiwiast.ASTIf_qc(p.if_qc_expr, p.expr)
 
@@ -247,7 +247,7 @@ class QiwiParser(Parser):
         a, b = p.if_qm_expr
         return qiwiast.ASTIf_qm(a, b, p.expr)
 
-    @_('IF_QM "(" expr ")" "{" expr "}"')
+    @_('IF "(" expr ")" "{" expr "}"')
     def if_qm_expr(self, p):
         return (p.expr0, p.expr1)
 # -----

@@ -304,33 +304,34 @@ class ASTIf_c(ASTExp):
         for if_statement in self.if_statements:
             if if_statement.count_var_use() is not None:
                 val += if_statement.count_var_use()
-
-        for else_statement in self.else_statements:
-            if else_statement.count_var_use() is not None:
-                val += else_statement.count_var_use()
+        if(self.else_statements is not None):
+            for else_statement in self.else_statements:
+                if else_statement.count_var_use() is not None:
+                    val += else_statement.count_var_use()
         return val
 
     def generate(self, context: qiwicg.Context, qf: qiwicg.QFunction) -> qiwicg.QBlock:
         block = qiwicg.QBlock()
-        cond = self.cond.generate(context, qf)
-        block.append(cond)
+        self.cond.generate(context, qf)
         __main__.log(f"IF_C: \t\t {self.cond.c_value}")
         if(self.cond.c_value):
             for statement in self.if_statements:
                 statement = statement.generate(context, qf)
                 block.append(statement)
-            for else_statement in self.else_statements:
-                if else_statement.count_var_use() is not None:
-                    for val in else_statement.count_var_use():
-                        qf.var_list_remove(val)
+            if(self.else_statements is not None):
+                for else_statement in self.else_statements:
+                    if else_statement.count_var_use() is not None:
+                        for val in else_statement.count_var_use():
+                            qf.var_list_remove(val)
         else:
             for if_statement in self.if_statements:
                 if if_statement.count_var_use() is not None:
                     for val in if_statement.count_var_use():
                         qf.var_list_remove(val)
-            for statement in self.else_statements:
-                statement = statement.generate(context, qf)
-                block.append(statement)
+            if(self.else_statements is not None):
+                for statement in self.else_statements:
+                    statement = statement.generate(context, qf)
+                    block.append(statement)
         return block
 
 

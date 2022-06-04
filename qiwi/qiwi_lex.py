@@ -5,8 +5,8 @@ from sly import Lexer
 
 class QiwiLexer(Lexer):
     tokens = {NUM, ID, ELSE, FN, FOR,
-              EQ, LT, LE, GT, GE, NE, USE,TIMES,DO,
-              IF_QC, IF_QM, AND, OR, NAND, NOR, XOR, XNOR, IF_C, PERSIST, IN}
+              EQ, LT, LE, GT, GE, NE, USE,TIMES,DO, IF, CTRL,
+              AND, OR, NAND, NOR, XOR, XNOR, IF_C, PERSIST, IN}
 
     literals = {'|', '~', '(', ')', '{', '}',
                 '[', ']', ';', '-', '+', '*', '/', '=', ',', '.', ':'}
@@ -33,9 +33,8 @@ class QiwiLexer(Lexer):
     ID['for'] = FOR
     ID['fn'] = FN
     ID['use'] = USE
-    ID['if_qc'] = IF_QC
+    ID['if'] = IF
     ID['if_c'] = IF_C
-    ID['if_qm'] = IF_QM
     ID['or'] = OR
     ID['and'] = AND
     ID['nand'] = NAND
@@ -46,6 +45,7 @@ class QiwiLexer(Lexer):
     ID['in'] = IN
     ID['times'] = TIMES
     ID['do'] = DO
+    ID['ctrl'] = CTRL
 
     ignore_comment = r'//.*'
 
