@@ -91,7 +91,8 @@ mainargs = list(map(
 context.current_name_space = 'self'
 qasmcode = context.functions[('main', 'self')][0].generate(context, [])
 output_lines = qasmcode.output
-qasmcode = qasmcode.generate_qasm(context)
+#qasmcode = qasmcode.generate_qasm(context)
+qasmcode,output_lines = qasmcode.generate_qasm_with_infection(context,output_lines)
 
 if args.optimize:
     zxcircuit = pyzx.Circuit.from_qasm(qasmcode)

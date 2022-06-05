@@ -3,7 +3,7 @@ from typing import Callable, cast, Optional
 
 from . import qiwiast
 import __main__
-
+from collections import deque
 
 class QGate:
     name: str
@@ -13,20 +13,57 @@ class QGate:
         self.name = name
         self.connections = bits
 
+class QGraph:
+    
+    def __init__(self):
+        self.graph = dict()
+    
+    def addEdge(self,dependent,dependency):
+        if not self.graph.get(dependent):
+            self.graph[dependent] = [dependency]
+        else:
+            self.graph[dependent].append(dependency)
+    
+    def getAllDependencies(self,dependents):
+        visited = []
+        queue = deque()
+        for dependent in dependents:
+            queue.append(dependent)
+            visited.append(dependent)
+        dependencies = dict()
+        count = 0
+        while (len(queue) > 0):      
+            u = queue.popleft()
+            dependencies[u] = count
+            count += 1
+            if(self.graph.get(u) == None):
+                continue;
+            for itr in self.graph[u]:
+                if (itr not in visited):    
+                    visited.append(itr)
+                    queue.append(itr)
+        return dependencies
 
 class QBlock:
     gates: list[QGate]
     output: list[int]
+    graph: QGraph
 
     def __init__(self) -> None:
         self.gates = []
         self.output = []
+        self.graph = QGraph()
 
     def add(self, gate: QGate) -> None:
         self.gates.append(gate)
 
     def append(self, block: QBlock) -> None:
         self.gates += block.gates
+    
+    def buildGraph(self):
+        for gate in self.gates:
+            for loc in gate.connections[:-1]:
+                self.graph.addEdge(gate.connections[-1],loc)
 
     def generate_qasm(self, context: Context) -> str:
         asmcode = f"OPENQASM 2.0;\ninclude \"qelib1.inc\";\n\nqreg q[{context.used_qbits}];\n\n"
@@ -41,6 +78,32 @@ class QBlock:
             asmcode += line
 
         return asmcode
+
+
+    def generate_qasm_with_infection(self, context: Context, output_lines: list[int]) -> str:
+        
+        self.buildGraph()
+        newQline = self.graph.getAllDependencies(output_lines)
+        asmcode = f"OPENQASM 2.0;\ninclude \"qelib1.inc\";\n\nqreg q[{len(newQline)}];\n\n"
+        print(f"Mapping --> {newQline}")
+        for gate in self.gates:
+            line = f"{gate.name}"
+            deleteCmd = False
+            
+            for c in gate.connections:
+                if newQline.get(c)==None:
+                    deleteCmd = True
+                    break
+                line += f" q[{newQline[c]}],"
+            if deleteCmd:
+                continue
+            line = line[:-1] + ";\n"
+
+            asmcode += line
+        new_output_lines = []
+        for output_line in output_lines:
+            new_output_lines.append( newQline[output_line])
+        return asmcode, new_output_lines
 
 
 class QFunction:

@@ -1,7 +1,6 @@
-use abc ;
-use def ;
 fn main() {
-    a: qN = 0;
-    b: qN = 1;
-    def.sub(abc.add(a,b),abc.add(b,a))
+    a: qN = 3;
+    b: qN = 5;
+    for b times do {X(a)};
+    a
 }
