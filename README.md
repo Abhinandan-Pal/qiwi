@@ -1,4 +1,5 @@
 # Qiwi
+Rust Implementation: [Link](https://github.com/argentite/qiwi) 
 # Running
 See `python -m qiwi --help` for available options.
 
